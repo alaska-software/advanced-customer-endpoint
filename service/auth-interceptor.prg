@@ -28,20 +28,11 @@ ENDCLASS
 
 
 /// <summary>
-/// Validates a Bearer JWT before method execution
+/// Validates a Bearer token before method execution using AuthService
 /// </summary>
 ///
-/// <remarks>
-/// Two independent checks are required:
-///   1. :verify()  - the signature must match our secret (token untampered).
-///   2. :decode() + getPayload():isValid() - the token must still be within
-///      its time window (exp / nbf). NOTE: :verify() does NOT check expiration,
-///      so an expired-but-correctly-signed token passes step 1 and must be
-///      rejected by step 2.
-/// </remarks>
-///
 METHOD AuthInterceptor:before( oHandler, cMethod, aParams )
-  LOCAL cAuth, cToken, oJWT
+  LOCAL cAuth
 
   UNUSED(cMethod)
   UNUSED(aParams)
@@ -49,37 +40,20 @@ METHOD AuthInterceptor:before( oHandler, cMethod, aParams )
   // Expect "Authorization: Bearer <token>"
   cAuth := oHandler:HttpRequest:getHeader("Authorization")
 
-  IF Empty(cAuth) .OR. Upper(Left(cAuth, 7)) != "BEARER "
-    oHandler:setError( 401, "Missing or malformed authorization header" )
+  IF Empty(cAuth)
+    oHandler:setError( 401, "Missing authorization header" )
     ::voteAbort()
     RETURN SELF
   ENDIF
 
-  cToken := AllTrim( SubStr(cAuth, 8) )
-
-  oJWT := JWT():new()
-
-  // 1) Signature must verify against our shared secret.
-  //    A tampered token - or an "alg":"none" token - fails here.
-  IF !oJWT:verify( cToken, AUTH_SECRET )
-    oHandler:setError( 401, "Invalid token signature" )
+  // Use AuthService to validate the token
+  IF !AuthService():validateToken( cAuth )
+    oHandler:setError( 401, "Invalid or expired token" )
     ::voteAbort()
     RETURN SELF
   ENDIF
 
-  // 2) Token must decode and still be within its exp / nbf window.
-  IF !oJWT:decode( cToken ) .OR. !oJWT:getPayload():isValid()
-    oHandler:setError( 401, "Expired or not-yet-valid token" )
-    ::voteAbort()
-    RETURN SELF
-  ENDIF
-
-  // Token is valid. The caller's identity is available as
-  //   oJWT:getPayload():getSubject()
-  // RestHandler currently has no setUser() hook to forward it to the
-  // business method; if you need the identity downstream, expose one on
-  // your handler (or stash it on the request) here.
-
+  // Token is valid - allow request to proceed
   ::voteCommit()
 
 RETURN SELF

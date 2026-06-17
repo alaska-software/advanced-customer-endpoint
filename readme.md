@@ -27,8 +27,10 @@ REST APIs with:
   AdvCustSvc class)
 - **advanced-customer-handler.prg** - REST handler with route mappings and HTTP
   method implementations
-- **auth-interceptor.prg** - API key authentication interceptor (validates
-  Authorization header)
+- **auth-handler.prg** - Authentication handler that issues JWT tokens for valid
+  credentials
+- **auth-interceptor.prg** - JWT authentication interceptor (validates
+  Authorization header using AuthService)
 - **cache-interceptor.prg** - Result caching interceptor for GET operations
 - **logging-interceptor.prg** - Request/response logging with execution timing
 - **advcustsvc.exe.config** - Service configuration (endpoint, port, health
@@ -40,7 +42,8 @@ REST APIs with:
   CustomerDataMgr class)
 - **wa-container.prg** - Stateless workarea container for efficient
   multi-threaded database access
-- **auth-service.prg** - Authentication service with API key validation
+- **auth-service.prg** - Authentication service with JWT validation, token
+  generation, and user authentication
 
 ### Data Layer
 
@@ -62,13 +65,52 @@ advcustsvc.exe.config).
 
 ### Authentication
 
-All requests require an `Authorization` header:
+The service uses JWT-based authentication. To obtain a token:
+
+1. **Login to get a JWT token:**
+
+```bash
+POST http://localhost:9000/auth/login
+Content-Type: application/json
+
+{
+  "user": "alice",
+  "password": "secret"
+}
+```
+
+Response:
+```json
+{
+  "error": null,
+  "result": {
+    "token": "<jwt-token>",
+    "tokenType": "Bearer",
+    "expiresIn": 3600
+  }
+}
+```
+
+2. **Use the token in subsequent requests:**
 
 ```
-Authorization: Bearer demo-api-key-12345
+Authorization: Bearer <jwt-token>
 ```
+
+Tokens expire after 1 hour (3600 seconds). The authentication is handled by:
+- **AuthHandler** (`auth-handler.prg`) - Issues tokens via `/auth/login` endpoint
+- **AuthService** (`auth-service.prg`) - Validates credentials and manages JWT operations
+- **AuthInterceptor** (`auth-interceptor.prg`) - Validates tokens on protected endpoints
 
 ### Routes
+
+#### Authentication Routes (AuthHandler)
+
+| Method | Endpoint        | Handler Method     | Description                    |
+|--------|-----------------|--------------------|--------------------------------|
+| POST   | `/auth/login`   | login(oCredentials)| Authenticate and receive token |
+
+#### Customer Routes (CustomerHandler)
 
 | Method | Endpoint                 | Handler Method           | Description               |
 |--------|--------------------------|--------------------------|---------------------------|
@@ -78,7 +120,7 @@ Authorization: Bearer demo-api-key-12345
 | PUT    | `/customer/:id`          | saveById(nId, oCustomer) | Create or update customer |
 | DELETE | `/customer/:id`          | deleteById(nId)          | Delete customer by ID     |
 
-All responses use the "envelope" format.
+All responses use the "envelope" format. Customer routes require authentication (JWT token).
 
 ## Customer Data Schema
 
@@ -170,7 +212,7 @@ Interceptors execute in registration order (see advanced-customer-handler.prg:
 36-47):
 
 1. **LoggingInterceptor** - Logs all requests/responses with timing
-2. **AuthInterceptor** - Validates API keys for all methods
+2. **AuthInterceptor** - Validates JWT tokens for all methods
 3. **CacheInterceptor** - Caches results for read operations (getAll, getById,
    getByName)
 
@@ -234,11 +276,14 @@ Edit `service/advcustsvc.exe.config` to customize:
 
 ## Security Note
 
-**The authentication implementation uses a hard-coded API key for demonstration
-purposes.** In production:
+**The authentication implementation uses JWT tokens with a hard-coded signing
+secret for demonstration purposes.** In production:
 
-- Implement proper JWT or OAuth2 token validation
-- Use secure key storage (environment variables, key vaults)
+- Load the JWT secret from configuration-manager or environment variables (never
+  hard-code)
+- Use stronger signing algorithms (RS256 with public/private keys)
+- Implement proper user authentication with password hashing (bcrypt, argon2)
 - Add HTTPS/TLS encryption
 - Implement rate limiting and request throttling
 - Add audit logging for security events
+- Consider refresh tokens for extended sessions
