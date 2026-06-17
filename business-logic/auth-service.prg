@@ -1,14 +1,14 @@
+
 //////////////////////////////////////////////////////////////////////
 ///
 /// <summary>
-/// Simplified Authentication Service using API Key validation
+/// Authentication Service using JWT validation
 /// </summary>
 ///
 /// <remarks>
-/// This is a simplified implementation for demonstration purposes.
-/// Uses a hard-coded API key to validate authorization headers.
-/// This example focuses on demonstrating the interceptor pattern,
-/// not production-grade security.
+/// This service validates JWT tokens signed with HS256.
+/// The signing secret must match the one used in login-endpoint.prg.
+/// In production, load the secret from configuration-manager.
 /// </remarks>
 ///
 /// <copyright>
@@ -18,51 +18,52 @@
 //////////////////////////////////////////////////////////////////////
 
 #include "common.ch"
+#include "auth-service.ch"
 
 CLASS AuthService
   PROTECTED:
-  CLASS VAR _cValidApiKey INIT "demo-api-key-12345"
+  CLASS VAR _cJwtSecret INIT AUTH_SECRET
 
   EXPORTED:
-  CLASS METHOD setApiKey( cKey )
+  CLASS METHOD setJwtSecret( cSecret )
   CLASS METHOD validateToken( cToken )
-  CLASS METHOD getValidApiKey()
+  CLASS METHOD getJwtSecret()
 ENDCLASS
 
 
 /// <summary>
-/// Set the valid API key (optional - for testing)
+/// Set the JWT signing secret (optional - for testing)
 /// </summary>
 ///
-CLASS METHOD AuthService:setApiKey( cKey )
-  IF !Empty(cKey)
-    ::_cValidApiKey := cKey
+CLASS METHOD AuthService:setJwtSecret( cSecret )
+  IF !Empty(cSecret)
+    ::_cJwtSecret := cSecret
   ENDIF
 RETURN
 
 
 /// <summary>
-/// Get the valid API key (for testing purposes)
+/// Get the JWT signing secret (for testing purposes)
 /// </summary>
 ///
-CLASS METHOD AuthService:getValidApiKey()
-RETURN ::_cValidApiKey
+CLASS METHOD AuthService:getJwtSecret()
+RETURN ::_cJwtSecret
 
 
 /// <summary>
-/// Validate an authorization token against hard-coded API key
+/// Validate a JWT authorization token
 /// </summary>
-/// <param name="cToken">The authorization token (e.g., "Bearer demo-api-key-12345")</param>
+/// <param name="cToken">The authorization token (e.g., "Bearer <jwt>")</param>
 /// <returns>Logical - .T. if valid, .F. otherwise</returns>
 ///
 CLASS METHOD AuthService:validateToken( cToken )
-  LOCAL cTokenValue
+  LOCAL cTokenValue, oJwt, oPayload
 
   IF Empty(cToken)
     RETURN .F.
   ENDIF
 
-  // Parse token format: "Bearer <api-key>" or just "<api-key>"
+  // Parse token format: "Bearer <jwt>" or just "<jwt>"
   IF "Bearer " $ cToken
     cTokenValue := SubStr(cToken, At("Bearer ", cToken) + 7)
   ELSE
@@ -72,5 +73,18 @@ CLASS METHOD AuthService:validateToken( cToken )
   // Trim whitespace
   cTokenValue := AllTrim(cTokenValue)
 
-  // Simple comparison with hard-coded API key
-RETURN (cTokenValue == ::_cValidApiKey)
+  // Decode and verify JWT
+  oJwt := JWT():new()
+  oPayload := oJwt:decode( cTokenValue, "HS256", ::_cJwtSecret )
+
+  // If decode fails or token is expired, oPayload will be NIL
+  IF oPayload == NIL
+    RETURN .F.
+  ENDIF
+
+  // Check expiration
+  IF oPayload:isExpired()
+    RETURN .F.
+  ENDIF
+
+RETURN .T.
