@@ -270,7 +270,7 @@ Edit `service/advcustsvc.exe.config` to customize:
 
 1. Update `GetCustomerStructure()` in customer-schema.prg
 2. Update `CreateCustomerIndexes()` as needed
-3. Modify `CustomerWAContainer:toWorkarea()` and `fromWorkarea()` in
+3. Modify `WACCustomer:toWorkarea()` and `fromWorkarea()` in
    customer-data-manager.prg
 4. Rebuild and recreate the database
 

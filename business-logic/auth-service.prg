@@ -1,4 +1,3 @@
-
 //////////////////////////////////////////////////////////////////////
 ///
 /// <summary>
@@ -22,9 +21,10 @@
 
 CLASS AuthService
   PROTECTED:
-  CLASS VAR _cJwtSecret INIT AUTH_SECRET
+  CLASS VAR _JwtSecret
 
   EXPORTED:
+  CLASS METHOD initClass()
   CLASS METHOD setJwtSecret( cSecret )
   CLASS METHOD validateToken( cToken )
   CLASS METHOD getJwtSecret()
@@ -34,12 +34,21 @@ ENDCLASS
 
 
 /// <summary>
+/// Initialize class-level defaults
+/// </summary>
+///
+CLASS METHOD AuthService:initClass()
+  ::_JwtSecret := AUTH_SECRET
+RETURN SELF
+
+
+/// <summary>
 /// Set the JWT signing secret (optional - for testing)
 /// </summary>
 ///
 CLASS METHOD AuthService:setJwtSecret( cSecret )
   IF !Empty(cSecret)
-    ::_cJwtSecret := cSecret
+    ::_JwtSecret := cSecret
   ENDIF
 RETURN
 
@@ -49,7 +58,7 @@ RETURN
 /// </summary>
 ///
 CLASS METHOD AuthService:getJwtSecret()
-RETURN ::_cJwtSecret
+RETURN ::_JwtSecret
 
 
 /// <summary>
@@ -75,20 +84,20 @@ CLASS METHOD AuthService:validateToken( cToken )
   // Trim whitespace
   cTokenValue := AllTrim(cTokenValue)
 
-  // Decode and verify JWT
+  // verify JWT
   oJwt := JWT():new()
-  oPayload := oJwt:decode( cTokenValue, "HS256", ::_cJwtSecret )
-
-  // If decode fails or token is expired, oPayload will be NIL
-  IF oPayload == NIL
+  IF !oJwt:verify( cTokenValue, ::_JwtSecret )
     RETURN .F.
   ENDIF
 
-  // Check expiration
+  IF !oJwt:decode( cTokenValue )
+    RETURN .F.
+  ENDIF
+
+  oPayload := oJwt:getPayload()
   IF oPayload:isExpired()
     RETURN .F.
   ENDIF
-
 RETURN .T.
 
 
@@ -127,6 +136,6 @@ CLASS METHOD AuthService:generateToken( cUser, cRole )
 
   // Encode and sign the token
   oJwt := JWT():new()
-  cToken := oJwt:encode( oPayload, "HS256", ::_cJwtSecret )
+  cToken := oJwt:encode( oPayload, "HS256", ::_JwtSecret )
 
 RETURN cToken

@@ -15,6 +15,7 @@
 ///
 //////////////////////////////////////////////////////////////////////
 
+#include "common.ch"
 #include "dmlb.ch"
 
 /// <summary>
@@ -28,18 +29,19 @@ FUNCTION CreateCustomerTable( cPath )
    LOCAL aStruct := {}
    LOCAL cDBF := "customer"
    LOCAL lSuccess := .F.
+   LOCAL oE
 
    DEFAULT cPath TO ".\"
 
    aStruct := GetCustomerStructure()
 
    // Create the DBF table with DBFCDX driver
-   BEGIN SEQUENCE
-      DbCreate( cPath + cDBF, aStruct, "DBFCDX" )
+   BEGIN TRY
+      DbCreate( cPath + cDBF, aStruct, "FOXCDX" )
       lSuccess := .T.
-   RECOVER
+   RECOVER USING oE
       lSuccess := .F.
-   END SEQUENCE
+   END
 
 RETURN lSuccess
 
@@ -84,7 +86,7 @@ RETURN aStruct
 ///
 FUNCTION CreateCustomerIndexes()
    LOCAL lSuccess := .F.
-
+   FIELD cust_id, lastname, firstname, email, city, active
    IF !Used()
       RETURN .F.
    ENDIF
@@ -94,7 +96,7 @@ FUNCTION CreateCustomerIndexes()
       INDEX ON cust_id TAG cust_id TO customer FOR !Deleted()
 
       // Secondary indexes for searching and filtering
-      INDEX ON Upper( lastname + firstname ) TAG name TO customer FOR !Deleted()  // Full name search
+      INDEX ON Upper( lastname - firstname ) TAG name TO customer FOR !Deleted()  // Full name search
       INDEX ON Upper( email ) TAG email TO customer FOR !Deleted()                 // Email lookup
       INDEX ON Upper( city ) TAG city TO customer FOR !Deleted()                   // City-based queries
       INDEX ON active TAG active TO customer FOR !Deleted()                        // Active status filter

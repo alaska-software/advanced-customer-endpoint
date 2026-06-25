@@ -1,0 +1,224 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Authentication API",
+    "description": "Issues JWT tokens for valid credentials. The returned token can be used with the Bearer authentication scheme on protected endpoints.",
+    "version": "1.0.0",
+    "contact": {
+      "name": "Alaska Software Inc.",
+      "url": "https://www.alaska-software.com"
+    },
+    "license": {
+      "name": "Copyright Alaska Software Inc. (c) 2026. All rights reserved."
+    }
+  },
+  "servers": [
+    {
+      "url": "/",
+      "description": "Default server"
+    }
+  ],
+  "paths": {
+    "/auth/login": {
+      "post": {
+        "summary": "Authenticate user and issue a JWT token",
+        "description": "Authenticates the user with the provided credentials and returns a signed JWT token on success. The token can then be used as a Bearer token on protected endpoints.",
+        "operationId": "login",
+        "tags": [
+          "Authentication"
+        ],
+        "requestBody": {
+          "description": "User credentials required for authentication",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "user",
+                  "password"
+                ],
+                "properties": {
+                  "user": {
+                    "type": "string",
+                    "description": "The username of the account to authenticate",
+                    "minLength": 1,
+                    "example": "alice"
+                  },
+                  "password": {
+                    "type": "string",
+                    "description": "The plaintext password for the account",
+                    "format": "password",
+                    "minLength": 1,
+                    "example": "secret"
+                  }
+                }
+              },
+              "examples": {
+                "validCredentials": {
+                  "summary": "Valid login request",
+                  "value": {
+                    "user": "alice",
+                    "password": "secret"
+                  }
+                },
+                "missingPassword": {
+                  "summary": "Request missing password field (will fail validation)",
+                  "value": {
+                    "user": "alice",
+                    "password": ""
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authentication successful. Returns a signed JWT token.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Standard response envelope",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "Error message if the request failed, null on success",
+                      "example": null
+                    },
+                    "result": {
+                      "type": "object",
+                      "description": "Authentication result payload",
+                      "properties": {
+                        "token": {
+                          "type": "string",
+                          "description": "Signed JWT token to be used for subsequent authenticated requests",
+                          "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhbGljZSIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzAwMDAwMDAwLCJleHAiOjE3MDAwMDM2MDB9.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+                        },
+                        "tokenType": {
+                          "type": "string",
+                          "description": "The token type to be used in the Authorization header",
+                          "enum": [
+                            "Bearer"
+                          ],
+                          "example": "Bearer"
+                        },
+                        "expiresIn": {
+                          "type": "integer",
+                          "description": "Token lifetime in seconds",
+                          "example": 3600
+                        }
+                      },
+                      "required": [
+                        "token",
+                        "tokenType",
+                        "expiresIn"
+                      ]
+                    }
+                  }
+                },
+                "examples": {
+                  "successResponse": {
+                    "summary": "Successful authentication response",
+                    "value": {
+                      "error": null,
+                      "result": {
+                        "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhbGljZSIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzAwMDAwMDAwLCJleHAiOjE3MDAwMDM2MDB9.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
+                        "tokenType": "Bearer",
+                        "expiresIn": 3600
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request. The request body is missing required fields or fields are empty.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Standard error envelope",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Human-readable error message describing what went wrong",
+                      "example": "user and password are required"
+                    },
+                    "result": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "Always null when an error is present",
+                      "example": null
+                    }
+                  }
+                },
+                "examples": {
+                  "missingFields": {
+                    "summary": "Missing or empty user/password fields",
+                    "value": {
+                      "error": "user and password are required",
+                      "result": null
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized. The provided credentials are invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Standard error envelope",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Human-readable error message describing what went wrong",
+                      "example": "Invalid credentials"
+                    },
+                    "result": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "Always null when an error is present",
+                      "example": null
+                    }
+                  }
+                },
+                "examples": {
+                  "invalidCredentials": {
+                    "summary": "Wrong username or password",
+                    "value": {
+                      "error": "Invalid credentials",
+                      "result": null
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Authentication",
+      "description": "Endpoints for user authentication and JWT token issuance"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT token obtained from the /auth/login endpoint. Include it in the Authorization header as: Bearer <token>"
+      }
+    }
+  }
+}

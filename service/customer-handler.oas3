@@ -1,0 +1,989 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Customer REST API",
+    "description": "Customer management API built with Xbase++ RestHandler. All endpoints require JWT Bearer token authentication. Requests are logged via LoggingInterceptor. Read operations (getAll, getById, getByName) benefit from response caching via CacheInterceptor.",
+    "version": "1.0.0",
+    "contact": {
+      "name": "Alaska Software Inc.",
+      "url": "https://www.alaska-software.com"
+    },
+    "license": {
+      "name": "Copyright Alaska Software Inc. (c) 2026. All rights reserved."
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080",
+      "description": "Local development server"
+    },
+    {
+      "url": "https://api1.alaska-software.net",
+      "description": "Production server"
+    }
+  ],
+  "security": [
+    {
+      "BearerAuth": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "Customer",
+      "description": "Customer management operations"
+    }
+  ],
+  "paths": {
+    "/customer/all": {
+      "get": {
+        "tags": ["Customer"],
+        "summary": "Retrieve all customers",
+        "description": "Returns a list of all customers wrapped in an envelope response. Response is cached by CacheInterceptor. Requires valid JWT Bearer token.",
+        "operationId": "getAll",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved all customers",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "description": "Indicates whether the request was successful"
+                    },
+                    "data": {
+                      "type": "array",
+                      "description": "Array of customer objects",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "integer",
+                            "description": "Unique customer identifier"
+                          },
+                          "name": {
+                            "type": "string",
+                            "description": "Full name of the customer"
+                          },
+                          "email": {
+                            "type": "string",
+                            "format": "email",
+                            "description": "Customer email address"
+                          },
+                          "phone": {
+                            "type": "string",
+                            "description": "Customer phone number"
+                          },
+                          "address": {
+                            "type": "string",
+                            "description": "Customer street address"
+                          },
+                          "city": {
+                            "type": "string",
+                            "description": "Customer city"
+                          },
+                          "country": {
+                            "type": "string",
+                            "description": "Customer country"
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Timestamp when the customer was created"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "data": [
+                    {
+                      "id": 1,
+                      "name": "Alice Johnson",
+                      "email": "alice.johnson@example.com",
+                      "phone": "+1-555-0101",
+                      "address": "123 Main Street",
+                      "city": "Springfield",
+                      "country": "USA",
+                      "createdAt": "2025-03-15T08:30:00Z"
+                    },
+                    {
+                      "id": 2,
+                      "name": "Bob Smith",
+                      "email": "bob.smith@example.com",
+                      "phone": "+1-555-0102",
+                      "address": "456 Oak Avenue",
+                      "city": "Shelbyville",
+                      "country": "USA",
+                      "createdAt": "2025-04-20T14:15:00Z"
+                    },
+                    {
+                      "id": 3,
+                      "name": "Carol White",
+                      "email": "carol.white@example.com",
+                      "phone": "+49-30-123456",
+                      "address": "Berliner Str. 7",
+                      "city": "Berlin",
+                      "country": "Germany",
+                      "createdAt": "2025-05-10T09:00:00Z"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - JWT Bearer token is missing or invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer"
+                        },
+                        "message": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": 401,
+                    "message": "Unauthorized: Invalid or missing Bearer token"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer"
+                        },
+                        "message": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": 500,
+                    "message": "Internal server error"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/customer/{id}": {
+      "get": {
+        "tags": ["Customer"],
+        "summary": "Retrieve a customer by ID",
+        "description": "Returns a single customer identified by their numeric ID, wrapped in an envelope response. Response is cached by CacheInterceptor. Requires valid JWT Bearer token.",
+        "operationId": "getById",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Unique numeric identifier of the customer",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "example": 42
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved the customer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "integer",
+                          "description": "Unique customer identifier"
+                        },
+                        "name": {
+                          "type": "string",
+                          "description": "Full name of the customer"
+                        },
+                        "email": {
+                          "type": "string",
+                          "format": "email",
+                          "description": "Customer email address"
+                        },
+                        "phone": {
+                          "type": "string",
+                          "description": "Customer phone number"
+                        },
+                        "address": {
+                          "type": "string",
+                          "description": "Customer street address"
+                        },
+                        "city": {
+                          "type": "string",
+                          "description": "Customer city"
+                        },
+                        "country": {
+                          "type": "string",
+                          "description": "Customer country"
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "description": "Timestamp when the customer was created"
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "data": {
+                    "id": 42,
+                    "name": "Alice Johnson",
+                    "email": "alice.johnson@example.com",
+                    "phone": "+1-555-0101",
+                    "address": "123 Main Street",
+                    "city": "Springfield",
+                    "country": "USA",
+                    "createdAt": "2025-03-15T08:30:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - JWT Bearer token is missing or invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer"
+                        },
+                        "message": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": 401,
+                    "message": "Unauthorized: Invalid or missing Bearer token"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Customer not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer"
+                        },
+                        "message": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": 404,
+                    "message": "Customer not found"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer"
+                        },
+                        "message": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": 500,
+                    "message": "Internal server error"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["Customer"],
+        "summary": "Save or update a customer by ID",
+        "description": "Creates or updates a customer record identified by the numeric ID. Returns the saved customer object wrapped in an envelope response. Requires valid JWT Bearer token. This operation is NOT cached.",
+        "operationId": "saveById",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Unique numeric identifier of the customer to save or update",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "example": 42
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Customer object containing the data to save or update",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name", "email"],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Full name of the customer"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "Customer email address"
+                  },
+                  "phone": {
+                    "type": "string",
+                    "description": "Customer phone number"
+                  },
+                  "address": {
+                    "type": "string",
+                    "description": "Customer street address"
+                  },
+                  "city": {
+                    "type": "string",
+                    "description": "Customer city"
+                  },
+                  "country": {
+                    "type": "string",
+                    "description": "Customer country"
+                  }
+                }
+              },
+              "example": {
+                "name": "Alice Johnson",
+                "email": "alice.johnson@example.com",
+                "phone": "+1-555-0101",
+                "address": "123 Main Street",
+                "city": "Springfield",
+                "country": "USA"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Customer successfully saved or updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "integer",
+                          "description": "Unique customer identifier"
+                        },
+                        "name": {
+                          "type": "string",
+                          "description": "Full name of the customer"
+                        },
+                        "email": {
+                          "type": "string",
+                          "format": "email",
+                          "description": "Customer email address"
+                        },
+                        "phone": {
+                          "type": "string",
+                          "description": "Customer phone number"
+                        },
+                        "address": {
+                          "type": "string",
+                          "description": "Customer street address"
+                        },
+                        "city": {
+                          "type": "string",
+                          "description": "Customer city"
+                        },
+                        "country": {
+                          "type": "string",
+                          "description": "Customer country"
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "description": "Timestamp when the customer was created"
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "data": {
+                    "id": 42,
+                    "name": "Alice Johnson",
+                    "email": "alice.johnson@example.com",
+                    "phone": "+1-555-0101",
+                    "address": "123 Main Street",
+                    "city": "Springfield",
+                    "country": "USA",
+                    "createdAt": "2025-03-15T08:30:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - JWT Bearer token is missing or invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer"
+                        },
+                        "message": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": 401,
+                    "message": "Unauthorized: Invalid or missing Bearer token"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to save customer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer"
+                        },
+                        "message": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": 500,
+                    "message": "Failed to save customer"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Customer"],
+        "summary": "Delete a customer by ID",
+        "description": "Permanently deletes the customer identified by the numeric ID. Returns a boolean result wrapped in an envelope response. Requires valid JWT Bearer token. This operation is NOT cached.",
+        "operationId": "deleteById",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Unique numeric identifier of the customer to delete",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "example": 42
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Customer successfully deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "type": "boolean",
+                      "description": "True if the customer was successfully deleted"
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "data": true
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - JWT Bearer token is missing or invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer"
+                        },
+                        "message": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": 401,
+                    "message": "Unauthorized: Invalid or missing Bearer token"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Customer not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer"
+                        },
+                        "message": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": 404,
+                    "message": "Customer not found"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer"
+                        },
+                        "message": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": 500,
+                    "message": "Internal server error"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/customer/search/{name}": {
+      "get": {
+        "tags": ["Customer"],
+        "summary": "Search customers by name",
+        "description": "Returns a list of customers whose name matches the provided search string, wrapped in an envelope response. Response is cached by CacheInterceptor. Requires valid JWT Bearer token.",
+        "operationId": "getByName",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "description": "Name or partial name string to search for",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "Johnson"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved matching customers",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "type": "array",
+                      "description": "Array of matching customer objects",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "integer",
+                            "description": "Unique customer identifier"
+                          },
+                          "name": {
+                            "type": "string",
+                            "description": "Full name of the customer"
+                          },
+                          "email": {
+                            "type": "string",
+                            "format": "email",
+                            "description": "Customer email address"
+                          },
+                          "phone": {
+                            "type": "string",
+                            "description": "Customer phone number"
+                          },
+                          "address": {
+                            "type": "string",
+                            "description": "Customer street address"
+                          },
+                          "city": {
+                            "type": "string",
+                            "description": "Customer city"
+                          },
+                          "country": {
+                            "type": "string",
+                            "description": "Customer country"
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Timestamp when the customer was created"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "data": [
+                    {
+                      "id": 42,
+                      "name": "Alice Johnson",
+                      "email": "alice.johnson@example.com",
+                      "phone": "+1-555-0101",
+                      "address": "123 Main Street",
+                      "city": "Springfield",
+                      "country": "USA",
+                      "createdAt": "2025-03-15T08:30:00Z"
+                    },
+                    {
+                      "id": 87,
+                      "name": "Mark Johnson",
+                      "email": "mark.johnson@example.com",
+                      "phone": "+1-555-0199",
+                      "address": "789 Elm Street",
+                      "city": "Capital City",
+                      "country": "USA",
+                      "createdAt": "2025-06-01T11:45:00Z"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - JWT Bearer token is missing or invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer"
+                        },
+                        "message": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": 401,
+                    "message": "Unauthorized: Invalid or missing Bearer token"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No customers found matching the provided name",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "type": "array",
+                      "description": "Empty array when no customers match",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer"
+                        },
+                        "message": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "success": false,
+                  "data": [],
+                  "error": {
+                    "code": 404,
+                    "message": "No customers found matching: Johnson"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer"
+                        },
+                        "message": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": 500,
+                    "message": "Internal server error"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT Bearer token required. Validated by AuthInterceptor on every request. Include the token in the Authorization header as: Authorization: Bearer <token>"
+      }
+    }
+  }
+}
