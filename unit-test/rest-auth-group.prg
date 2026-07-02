@@ -1,31 +1,35 @@
+//////////////////////////////////////////////////////////////////////
+///
+/// <summary>
+/// Unit tests for Authentication API - POST /auth/login
+/// </summary>
+///
+/// <remarks>
+/// Coverage:
+///   1. Functional Validation Tests
+///      - Response envelope on success
+///      - Distinct success-payload fields (token / tokenType / expiresIn)
+///   2. Edge Case Tests
+///      - minLength:1 lower boundary (accepted)
+///      - empty string (rejected)
+///   3. Data Pattern Tests
+///      - Case-sensitive username lookup
+///   4. Error Condition Tests
+///      - Wrong password
+///      - Non-existent user
+///      - Missing required field (user / password)
+///
+/// Assumptions:
+///   - Valid credentials: user="alice", password="secret"
+///   - Server is running at http://localhost:9000
+///   - JWT token format: three Base64URL segments separated by dots
+///   - OpenAPI Spec Version: 3.0.3, API Version: 1.0.0
+/// </remarks>
+///
+//////////////////////////////////////////////////////////////////////
+
 #include "..\.assets\xpp-unit\unit-test.ch"
 #include "dmlb.ch"
-
-/*
- * Test Suite: Authentication API - POST /auth/login
- * OpenAPI Spec Version: 3.0.3
- * API Version: 1.0.0
- * Base URL: http://localhost:9000
- *
- * Coverage (deduplicated by framework capability):
- *   1. Functional Validation Tests
- *      - Response envelope on success
- *      - Distinct success-payload fields (token / tokenType / expiresIn)
- *   2. Edge Case Tests
- *      - minLength:1 lower boundary (accepted)
- *      - empty string (rejected)
- *   3. Data Pattern Tests
- *      - Case-sensitive username lookup
- *   4. Error Condition Tests
- *      - Wrong password
- *      - Non-existent user
- *      - Missing required field (user / password)
- *
- * Assumptions:
- *   - Valid credentials: user="alice", password="secret"
- *   - Server is running at http://localhost:9000
- *   - JWT token format: three Base64URL segments separated by dots
- */
 
 CLASS AuthLoginTestGroup FROM GenericTestGroup
    PROTECTED:
@@ -57,9 +61,9 @@ CLASS AuthLoginTestGroup FROM GenericTestGroup
 
 ENDCLASS
 
-// ─────────────────────────────────────────────
+//////////////////////////////////////////////////////////////////////
 // Setup / TearDown / Config
-// ─────────────────────────────────────────────
+//////////////////////////////////////////////////////////////////////
 
 METHOD AuthLoginTestGroup:setup()
    SUPER
@@ -91,16 +95,15 @@ METHOD AuthLoginTestGroup:config()
    ::addCase("testLoginError_MissingPasswordField")
 RETURN
 
-// ─────────────────────────────────────────────
-// 1. FUNCTIONAL VALIDATION TESTS
-// ─────────────────────────────────────────────
+//////////////////////////////////////////////////////////////////////
+// 1. Functional Validation Tests
+//////////////////////////////////////////////////////////////////////
 
-/*
- * Purpose : Validate the top-level response envelope on a successful login:
- *           HTTP 200, response is an object, "error" is null/NIL,
- *           "result" is an object.
- * Expected: Status 200, oResponse:error == NIL, oResponse:result is object
- */
+/// <summary>
+/// Validate the top-level response envelope on a successful login:
+/// HTTP 200, response is an object, "error" is null/NIL, "result" is an object.
+/// Expected: Status 200, oResponse:error == NIL, oResponse:result is object.
+/// </summary>
 METHOD AuthLoginTestGroup:testLoginSuccess_ResponseBodyStructure()
    LOCAL oRequest, oResponse, nStatus
    LOCAL oCredentials
@@ -121,11 +124,11 @@ METHOD AuthLoginTestGroup:testLoginSuccess_ResponseBodyStructure()
    CHECK_OBJECT_TYPE(oResponse:result)
 RETURN SELF
 
-/*
- * Purpose : Verify the "token" field inside result is a non-empty string
- *           and follows the JWT three-segment dot-separated format.
- * Expected: token is a non-empty string containing at least one dot
- */
+/// <summary>
+/// Verify the "token" field inside result is a non-empty string
+/// and follows the JWT three-segment dot-separated format.
+/// Expected: token is a non-empty string containing at least one dot.
+/// </summary>
 METHOD AuthLoginTestGroup:testLoginSuccess_TokenFieldPresent()
    LOCAL oRequest, oResponse, nStatus, cToken
    LOCAL oCredentials
@@ -150,11 +153,11 @@ METHOD AuthLoginTestGroup:testLoginSuccess_TokenFieldPresent()
    CHECK_TRUE(At(".", cToken) > 0)
 RETURN SELF
 
-/*
- * Purpose : Confirm that "tokenType" in the result is exactly "Bearer"
- *           as defined by the enum in the schema.
- * Expected: tokenType == "Bearer"
- */
+/// <summary>
+/// Confirm that "tokenType" in the result is exactly "Bearer"
+/// as defined by the enum in the schema.
+/// Expected: tokenType == "Bearer".
+/// </summary>
 METHOD AuthLoginTestGroup:testLoginSuccess_TokenTypeIsBearer()
    LOCAL oRequest, oResponse, nStatus
    LOCAL oCredentials
@@ -174,11 +177,11 @@ METHOD AuthLoginTestGroup:testLoginSuccess_TokenTypeIsBearer()
    CHECK_STR_EQUAL("Bearer", oResponse:result:tokenType)
 RETURN SELF
 
-/*
- * Purpose : Verify "expiresIn" is a positive integer representing
- *           the token lifetime in seconds (schema example: 3600).
- * Expected: expiresIn is numeric and > 0
- */
+/// <summary>
+/// Verify "expiresIn" is a positive integer representing
+/// the token lifetime in seconds (schema example: 3600).
+/// Expected: expiresIn is numeric and > 0.
+/// </summary>
 METHOD AuthLoginTestGroup:testLoginSuccess_ExpiresInIsPositiveInteger()
    LOCAL oRequest, oResponse, nStatus, nExpiresIn
    LOCAL oCredentials
@@ -202,18 +205,17 @@ METHOD AuthLoginTestGroup:testLoginSuccess_ExpiresInIsPositiveInteger()
    CHECK_GREATER(nExpiresIn, 0)
 RETURN SELF
 
-// ─────────────────────────────────────────────
-// 2. EDGE CASE TESTS
-// ─────────────────────────────────────────────
+//////////////////////////////////////////////////////////////////////
+// 2. Edge Case Tests
+//////////////////////////////////////////////////////////////////////
 
-/*
- * Purpose : Test boundary condition where username is exactly 1 character
- *           (minLength: 1). Server must NOT respond with 400 (field is present).
- * Expected: Status is 200 or 401 (not 400)
- * Rationale: minLength=1 means a single character is the minimum valid length.
- *            Username chosen as representative; password side is assumed
- *            to follow the same validation path.
- */
+/// <summary>
+/// Test boundary condition where username is exactly 1 character (minLength: 1).
+/// Server must NOT respond with 400 (field is present).
+/// Expected: Status is 200 or 401 (not 400).
+/// minLength=1 means a single character is the minimum valid length.
+/// Username chosen as representative; password side is assumed to follow the same validation path.
+/// </summary>
 METHOD AuthLoginTestGroup:testLoginEdge_SingleCharUsername()
    LOCAL oRequest, nStatus
    LOCAL oCredentials
@@ -232,14 +234,13 @@ METHOD AuthLoginTestGroup:testLoginEdge_SingleCharUsername()
    CHECK_TRUE(nStatus == 200 .OR. nStatus == 401)
 RETURN SELF
 
-/*
- * Purpose : Test that an empty string for "user" triggers a 400 Bad Request.
- *           The schema specifies minLength:1, so empty string is invalid.
- * Expected: Status 400, error field is non-empty string
- * Rationale: Empty string violates minLength:1 constraint. Username chosen
- *            as representative; the same validation is assumed to apply
- *            to the password field.
- */
+/// <summary>
+/// Test that an empty string for "user" triggers a 400 Bad Request.
+/// The schema specifies minLength:1, so empty string is invalid.
+/// Expected: Status 400, error field is non-empty string.
+/// Empty string violates minLength:1 constraint. Username chosen as representative;
+/// the same validation is assumed to apply to the password field.
+/// </summary>
 METHOD AuthLoginTestGroup:testLoginEdge_EmptyUsername()
    LOCAL oRequest, oResponse, nStatus
    LOCAL oCredentials
@@ -260,19 +261,17 @@ METHOD AuthLoginTestGroup:testLoginEdge_EmptyUsername()
    CHECK_GREATER(Len(oResponse:error), 0)
 RETURN SELF
 
-// ─────────────────────────────────────────────
-// 3. DATA PATTERN TESTS
-// ─────────────────────────────────────────────
+//////////////////////////////////////////////////////////////////////
+// 3. Data Pattern Tests
+//////////////////////////////////////////////////////////////////////
 
-/*
- * Purpose : Test that username matching is case-sensitive and that the
- *           server does not silently normalize the input.
- *           "Alice" (uppercase A) should NOT authenticate as "alice".
- *           Also covers the "non-matching username" path representatively.
- * Expected: Status 401 (credentials invalid) or 400
- * Rationale: High-probability real-world pattern — users often type
- *            their username with an initial capital letter.
- */
+/// <summary>
+/// Test that username matching is case-sensitive and that the server does not
+/// silently normalize the input. "Alice" (uppercase A) should NOT authenticate as "alice".
+/// Also covers the "non-matching username" path representatively.
+/// Expected: Status 401 (credentials invalid) or 400.
+/// High-probability real-world pattern — users often type their username with an initial capital letter.
+/// </summary>
 METHOD AuthLoginTestGroup:testLoginPattern_UsernameWithUpperCase()
    LOCAL oRequest, nStatus
    LOCAL oCredentials
@@ -291,15 +290,14 @@ METHOD AuthLoginTestGroup:testLoginPattern_UsernameWithUpperCase()
    CHECK_TRUE(nStatus == 401 .OR. nStatus == 400)
 RETURN SELF
 
-// ─────────────────────────────────────────────
-// 4. ERROR CONDITION TESTS
-// ─────────────────────────────────────────────
+//////////////////////////////////////////////////////////////////////
+// 4. Error Condition Tests
+//////////////////////////////////////////////////////////////////////
 
-/*
- * Purpose : Verify that a correct username with a wrong password
- *           returns HTTP 401 Unauthorized.
- * Expected: Status 401, error field contains a message, result is null
- */
+/// <summary>
+/// Verify that a correct username with a wrong password returns HTTP 401 Unauthorized.
+/// Expected: Status 401, error field contains a message, result is null.
+/// </summary>
 METHOD AuthLoginTestGroup:testLoginError_WrongPassword()
    LOCAL oRequest, oResponse, nStatus
    LOCAL oCredentials
@@ -321,12 +319,12 @@ METHOD AuthLoginTestGroup:testLoginError_WrongPassword()
    CHECK_UNDEFINED_TYPE(oResponse:result)
 RETURN SELF
 
-/*
- * Purpose : Verify that a username that does not exist in the system
- *           returns HTTP 401 Unauthorized (not 404 or 500).
- * Expected: Status 401, error field is non-empty, result is null
- * Rationale: Returning 401 (not 404) avoids user enumeration attacks.
- */
+/// <summary>
+/// Verify that a username that does not exist in the system
+/// returns HTTP 401 Unauthorized (not 404 or 500).
+/// Expected: Status 401, error field is non-empty, result is null.
+/// Returning 401 (not 404) avoids user enumeration attacks.
+/// </summary>
 METHOD AuthLoginTestGroup:testLoginError_NonExistentUser()
    LOCAL oRequest, oResponse, nStatus
    LOCAL oCredentials
@@ -348,11 +346,11 @@ METHOD AuthLoginTestGroup:testLoginError_NonExistentUser()
    CHECK_UNDEFINED_TYPE(oResponse:result)
 RETURN SELF
 
-/*
- * Purpose : Verify that omitting the "user" field entirely returns HTTP 400.
- * Expected: Status 400, error message references missing fields
- * Rationale: "user" is marked as required in the schema.
- */
+/// <summary>
+/// Verify that omitting the "user" field entirely returns HTTP 400.
+/// Expected: Status 400, error message references missing fields.
+/// "user" is marked as required in the schema.
+/// </summary>
 METHOD AuthLoginTestGroup:testLoginError_MissingUserField()
    LOCAL oRequest, oResponse, nStatus
    LOCAL oCredentials
@@ -373,11 +371,11 @@ METHOD AuthLoginTestGroup:testLoginError_MissingUserField()
    CHECK_UNDEFINED_TYPE(oResponse:result)
 RETURN SELF
 
-/*
- * Purpose : Verify that omitting the "password" field entirely returns HTTP 400.
- * Expected: Status 400, error message references missing fields
- * Rationale: "password" is marked as required in the schema.
- */
+/// <summary>
+/// Verify that omitting the "password" field entirely returns HTTP 400.
+/// Expected: Status 400, error message references missing fields.
+/// "password" is marked as required in the schema.
+/// </summary>
 METHOD AuthLoginTestGroup:testLoginError_MissingPasswordField()
    LOCAL oRequest, oResponse, nStatus
    LOCAL oCredentials
