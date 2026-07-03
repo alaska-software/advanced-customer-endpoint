@@ -119,7 +119,11 @@ METHOD CustomerHandler:saveById( nId, oCustomer )
   LOCAL lSuccess
 
   // Business logic
-  lSuccess := CustomerDataMgr():save( nId, oCustomer )
+  IF nId==0
+    lSuccess := CustomerDataMgr():add( oCustomer )
+  ELSE
+    lSuccess := CustomerDataMgr():update( nId, oCustomer )
+  ENDIF
 
   IF !lSuccess
     ::setError( 500, "Failed to save customer" )
