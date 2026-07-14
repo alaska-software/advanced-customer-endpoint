@@ -4,30 +4,41 @@
 
 CLASS WACCustomer FROM WAContainer
   PROTECTED:
+  CLASS VAR _Path
   CLASS METHOD use()
   METHOD setupPrototype()
   EXPORTED:
+  CLASS METHOD setPath()
   METHOD fromWorkarea()
   METHOD toWorkarea()
 ENDCLASS
 
+CLASS METHOD WACCustomer:setPath(cPath)
+  ::_Path := cPath
+RETURN SELF
+
 // Opens the customer table with its compound index file
 CLASS METHOD WACCustomer:use()
   LOCAL cPath, oNode
-  oNode := ConfigManager():binary
-  IF IsNull(oNode)
-    XppRtFileLogger():error("No node application config file")
-    RETURN SELF
-  ENDIF
-  oNode := oNode:path
-  IF IsNull(oNode)
-    XppRtFileLogger():error("No path node in application config file")
-    RETURN SELF
-  ENDIF
-  cPath := oNode:customer
-  IF IsNull(cPath)
-    XppRtFileLogger():error("No customer attrib in path node in application config file")
-    RETURN SELF
+
+  IF IsNull(::_Path)
+    oNode := ConfigManager():binary
+    IF IsNull(oNode)
+      XppRtFileLogger():error("No node application config file")
+      RETURN SELF
+    ENDIF
+    oNode := oNode:path
+    IF IsNull(oNode)
+      XppRtFileLogger():error("No path node in application config file")
+      RETURN SELF
+    ENDIF
+    cPath := oNode:customer
+    IF IsNull(cPath)
+      XppRtFileLogger():error("No customer attrib in path node in application config file")
+      RETURN SELF
+    ENDIF
+  ELSE
+    cPath := ::_Path
   ENDIF
 
   // Open customer.dbf with customer.cdx compound index
