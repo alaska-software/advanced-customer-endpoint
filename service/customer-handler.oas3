@@ -61,43 +61,7 @@
                       "type": "array",
                       "description": "Array of customer objects",
                       "items": {
-                        "type": "object",
-                        "properties": {
-                          "id": {
-                            "type": "integer",
-                            "description": "Unique customer identifier"
-                          },
-                          "name": {
-                            "type": "string",
-                            "description": "Full name of the customer"
-                          },
-                          "email": {
-                            "type": "string",
-                            "format": "email",
-                            "description": "Customer email address"
-                          },
-                          "phone": {
-                            "type": "string",
-                            "description": "Customer phone number"
-                          },
-                          "address": {
-                            "type": "string",
-                            "description": "Customer street address"
-                          },
-                          "city": {
-                            "type": "string",
-                            "description": "Customer city"
-                          },
-                          "country": {
-                            "type": "string",
-                            "description": "Customer country"
-                          },
-                          "createdAt": {
-                            "type": "string",
-                            "format": "date-time",
-                            "description": "Timestamp when the customer was created"
-                          }
-                        }
+                        "$ref": "#/components/schemas/Customer"
                       }
                     }
                   }
@@ -106,34 +70,52 @@
                   "success": true,
                   "data": [
                     {
-                      "id": 1,
-                      "name": "Alice Johnson",
+                      "cust_id": "C00001",
+                      "firstname": "Alice",
+                      "lastname": "Johnson",
                       "email": "alice.johnson@example.com",
                       "phone": "+1-555-0101",
-                      "address": "123 Main Street",
+                      "street": "123 Main Street",
                       "city": "Springfield",
+                      "state": "IL",
+                      "zipcode": "62701",
                       "country": "USA",
-                      "createdAt": "2025-03-15T08:30:00Z"
+                      "active": true,
+                      "created": "2025-03-15",
+                      "modified": "2025-03-15",
+                      "notes": ""
                     },
                     {
-                      "id": 2,
-                      "name": "Bob Smith",
+                      "cust_id": "C00002",
+                      "firstname": "Bob",
+                      "lastname": "Smith",
                       "email": "bob.smith@example.com",
                       "phone": "+1-555-0102",
-                      "address": "456 Oak Avenue",
+                      "street": "456 Oak Avenue",
                       "city": "Shelbyville",
+                      "state": "TN",
+                      "zipcode": "37160",
                       "country": "USA",
-                      "createdAt": "2025-04-20T14:15:00Z"
+                      "active": true,
+                      "created": "2025-04-20",
+                      "modified": "2025-04-20",
+                      "notes": ""
                     },
                     {
-                      "id": 3,
-                      "name": "Carol White",
+                      "cust_id": "C00003",
+                      "firstname": "Carol",
+                      "lastname": "White",
                       "email": "carol.white@example.com",
                       "phone": "+49-30-123456",
-                      "address": "Berliner Str. 7",
+                      "street": "Berliner Str. 7",
                       "city": "Berlin",
+                      "state": "",
+                      "zipcode": "10115",
                       "country": "Germany",
-                      "createdAt": "2025-05-10T09:00:00Z"
+                      "active": true,
+                      "created": "2025-05-10",
+                      "modified": "2025-05-10",
+                      "notes": ""
                     }
                   ]
                 }
@@ -145,23 +127,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean"
-                    },
-                    "error": {
-                      "type": "object",
-                      "properties": {
-                        "code": {
-                          "type": "integer"
-                        },
-                        "message": {
-                          "type": "string"
-                        }
-                      }
-                    }
-                  }
+                  "$ref": "#/components/schemas/ErrorEnvelope"
                 },
                 "example": {
                   "success": false,
@@ -178,23 +144,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean"
-                    },
-                    "error": {
-                      "type": "object",
-                      "properties": {
-                        "code": {
-                          "type": "integer"
-                        },
-                        "message": {
-                          "type": "string"
-                        }
-                      }
-                    }
-                  }
+                  "$ref": "#/components/schemas/ErrorEnvelope"
                 },
                 "example": {
                   "success": false,
@@ -213,7 +163,7 @@
       "get": {
         "tags": ["Customer"],
         "summary": "Retrieve a customer by ID",
-        "description": "Returns a single customer identified by their numeric ID, wrapped in an envelope response. Response is cached by CacheInterceptor. Requires valid JWT Bearer token.",
+        "description": "Returns a single customer identified by their cust_id, wrapped in an envelope response. Response is cached by CacheInterceptor. Requires valid JWT Bearer token.",
         "operationId": "getById",
         "security": [
           {
@@ -225,12 +175,12 @@
             "name": "id",
             "in": "path",
             "required": true,
-            "description": "Unique numeric identifier of the customer",
+            "description": "Unique identifier of the customer (maps to cust_id, up to 8 characters)",
             "schema": {
-              "type": "integer",
-              "minimum": 1
+              "type": "string",
+              "maxLength": 8
             },
-            "example": 42
+            "example": "C00042"
           }
         ],
         "responses": {
@@ -245,57 +195,27 @@
                       "type": "boolean"
                     },
                     "data": {
-                      "type": "object",
-                      "properties": {
-                        "id": {
-                          "type": "integer",
-                          "description": "Unique customer identifier"
-                        },
-                        "name": {
-                          "type": "string",
-                          "description": "Full name of the customer"
-                        },
-                        "email": {
-                          "type": "string",
-                          "format": "email",
-                          "description": "Customer email address"
-                        },
-                        "phone": {
-                          "type": "string",
-                          "description": "Customer phone number"
-                        },
-                        "address": {
-                          "type": "string",
-                          "description": "Customer street address"
-                        },
-                        "city": {
-                          "type": "string",
-                          "description": "Customer city"
-                        },
-                        "country": {
-                          "type": "string",
-                          "description": "Customer country"
-                        },
-                        "createdAt": {
-                          "type": "string",
-                          "format": "date-time",
-                          "description": "Timestamp when the customer was created"
-                        }
-                      }
+                      "$ref": "#/components/schemas/Customer"
                     }
                   }
                 },
                 "example": {
                   "success": true,
                   "data": {
-                    "id": 42,
-                    "name": "Alice Johnson",
+                    "cust_id": "C00042",
+                    "firstname": "Alice",
+                    "lastname": "Johnson",
                     "email": "alice.johnson@example.com",
                     "phone": "+1-555-0101",
-                    "address": "123 Main Street",
+                    "street": "123 Main Street",
                     "city": "Springfield",
+                    "state": "IL",
+                    "zipcode": "62701",
                     "country": "USA",
-                    "createdAt": "2025-03-15T08:30:00Z"
+                    "active": true,
+                    "created": "2025-03-15",
+                    "modified": "2025-03-15",
+                    "notes": ""
                   }
                 }
               }
@@ -306,23 +226,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean"
-                    },
-                    "error": {
-                      "type": "object",
-                      "properties": {
-                        "code": {
-                          "type": "integer"
-                        },
-                        "message": {
-                          "type": "string"
-                        }
-                      }
-                    }
-                  }
+                  "$ref": "#/components/schemas/ErrorEnvelope"
                 },
                 "example": {
                   "success": false,
@@ -339,23 +243,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean"
-                    },
-                    "error": {
-                      "type": "object",
-                      "properties": {
-                        "code": {
-                          "type": "integer"
-                        },
-                        "message": {
-                          "type": "string"
-                        }
-                      }
-                    }
-                  }
+                  "$ref": "#/components/schemas/ErrorEnvelope"
                 },
                 "example": {
                   "success": false,
@@ -372,23 +260,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean"
-                    },
-                    "error": {
-                      "type": "object",
-                      "properties": {
-                        "code": {
-                          "type": "integer"
-                        },
-                        "message": {
-                          "type": "string"
-                        }
-                      }
-                    }
-                  }
+                  "$ref": "#/components/schemas/ErrorEnvelope"
                 },
                 "example": {
                   "success": false,
@@ -405,7 +277,7 @@
       "put": {
         "tags": ["Customer"],
         "summary": "Save or update a customer by ID",
-        "description": "Creates or updates a customer record identified by the numeric ID. Returns the saved customer object wrapped in an envelope response. Requires valid JWT Bearer token. This operation is NOT cached.",
+        "description": "Creates or updates a customer record. When the path id is empty, a new record is added. When the path id contains a valid cust_id, the matching record is updated. The cust_id field in the request body is always ignored — the customer identity is determined solely by the path parameter. Returns the saved customer data wrapped in an envelope response. Requires valid JWT Bearer token. This operation is NOT cached.",
         "operationId": "saveById",
         "security": [
           {
@@ -416,58 +288,35 @@
           {
             "name": "id",
             "in": "path",
-            "required": true,
-            "description": "Unique numeric identifier of the customer to save or update",
+            "required": false,
+            "description": "Pass an empty string to create a new customer record; pass an existing cust_id to update the matching record. The cust_id in the request body is always ignored.",
             "schema": {
-              "type": "integer",
-              "minimum": 1
+              "type": "string",
+              "maxLength": 8
             },
-            "example": 42
+            "example": "C00042"
           }
         ],
         "requestBody": {
           "required": true,
-          "description": "Customer object containing the data to save or update",
+          "description": "Customer data to save or update. The cust_id field in the body is always ignored; the customer identity is determined solely by the path id parameter.",
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "required": ["name", "email"],
-                "properties": {
-                  "name": {
-                    "type": "string",
-                    "description": "Full name of the customer"
-                  },
-                  "email": {
-                    "type": "string",
-                    "format": "email",
-                    "description": "Customer email address"
-                  },
-                  "phone": {
-                    "type": "string",
-                    "description": "Customer phone number"
-                  },
-                  "address": {
-                    "type": "string",
-                    "description": "Customer street address"
-                  },
-                  "city": {
-                    "type": "string",
-                    "description": "Customer city"
-                  },
-                  "country": {
-                    "type": "string",
-                    "description": "Customer country"
-                  }
-                }
+                "$ref": "#/components/schemas/CustomerInput"
               },
               "example": {
-                "name": "Alice Johnson",
+                "firstname": "Alice",
+                "lastname": "Johnson",
                 "email": "alice.johnson@example.com",
                 "phone": "+1-555-0101",
-                "address": "123 Main Street",
+                "street": "123 Main Street",
                 "city": "Springfield",
-                "country": "USA"
+                "state": "IL",
+                "zipcode": "62701",
+                "country": "USA",
+                "active": true,
+                "notes": ""
               }
             }
           }
@@ -484,57 +333,27 @@
                       "type": "boolean"
                     },
                     "data": {
-                      "type": "object",
-                      "properties": {
-                        "id": {
-                          "type": "integer",
-                          "description": "Unique customer identifier"
-                        },
-                        "name": {
-                          "type": "string",
-                          "description": "Full name of the customer"
-                        },
-                        "email": {
-                          "type": "string",
-                          "format": "email",
-                          "description": "Customer email address"
-                        },
-                        "phone": {
-                          "type": "string",
-                          "description": "Customer phone number"
-                        },
-                        "address": {
-                          "type": "string",
-                          "description": "Customer street address"
-                        },
-                        "city": {
-                          "type": "string",
-                          "description": "Customer city"
-                        },
-                        "country": {
-                          "type": "string",
-                          "description": "Customer country"
-                        },
-                        "createdAt": {
-                          "type": "string",
-                          "format": "date-time",
-                          "description": "Timestamp when the customer was created"
-                        }
-                      }
+                      "$ref": "#/components/schemas/Customer"
                     }
                   }
                 },
                 "example": {
                   "success": true,
                   "data": {
-                    "id": 42,
-                    "name": "Alice Johnson",
+                    "cust_id": "C00042",
+                    "firstname": "Alice",
+                    "lastname": "Johnson",
                     "email": "alice.johnson@example.com",
                     "phone": "+1-555-0101",
-                    "address": "123 Main Street",
+                    "street": "123 Main Street",
                     "city": "Springfield",
+                    "state": "IL",
+                    "zipcode": "62701",
                     "country": "USA",
-                    "createdAt": "2025-03-15T08:30:00Z"
+                    "active": true,
+                    "created": "2025-03-15",
+                    "modified": "2025-06-01",
+                    "notes": ""
                   }
                 }
               }
@@ -545,23 +364,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean"
-                    },
-                    "error": {
-                      "type": "object",
-                      "properties": {
-                        "code": {
-                          "type": "integer"
-                        },
-                        "message": {
-                          "type": "string"
-                        }
-                      }
-                    }
-                  }
+                  "$ref": "#/components/schemas/ErrorEnvelope"
                 },
                 "example": {
                   "success": false,
@@ -578,23 +381,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean"
-                    },
-                    "error": {
-                      "type": "object",
-                      "properties": {
-                        "code": {
-                          "type": "integer"
-                        },
-                        "message": {
-                          "type": "string"
-                        }
-                      }
-                    }
-                  }
+                  "$ref": "#/components/schemas/ErrorEnvelope"
                 },
                 "example": {
                   "success": false,
@@ -611,7 +398,7 @@
       "delete": {
         "tags": ["Customer"],
         "summary": "Delete a customer by ID",
-        "description": "Permanently deletes the customer identified by the numeric ID. Returns a boolean result wrapped in an envelope response. Requires valid JWT Bearer token. This operation is NOT cached.",
+        "description": "Permanently deletes the customer identified by the cust_id. Returns a boolean result wrapped in an envelope response. Requires valid JWT Bearer token. This operation is NOT cached.",
         "operationId": "deleteById",
         "security": [
           {
@@ -623,12 +410,12 @@
             "name": "id",
             "in": "path",
             "required": true,
-            "description": "Unique numeric identifier of the customer to delete",
+            "description": "Unique identifier (cust_id, up to 8 characters) of the customer to delete",
             "schema": {
-              "type": "integer",
-              "minimum": 1
+              "type": "string",
+              "maxLength": 8
             },
-            "example": 42
+            "example": "C00042"
           }
         ],
         "responses": {
@@ -660,23 +447,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean"
-                    },
-                    "error": {
-                      "type": "object",
-                      "properties": {
-                        "code": {
-                          "type": "integer"
-                        },
-                        "message": {
-                          "type": "string"
-                        }
-                      }
-                    }
-                  }
+                  "$ref": "#/components/schemas/ErrorEnvelope"
                 },
                 "example": {
                   "success": false,
@@ -693,23 +464,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean"
-                    },
-                    "error": {
-                      "type": "object",
-                      "properties": {
-                        "code": {
-                          "type": "integer"
-                        },
-                        "message": {
-                          "type": "string"
-                        }
-                      }
-                    }
-                  }
+                  "$ref": "#/components/schemas/ErrorEnvelope"
                 },
                 "example": {
                   "success": false,
@@ -726,23 +481,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean"
-                    },
-                    "error": {
-                      "type": "object",
-                      "properties": {
-                        "code": {
-                          "type": "integer"
-                        },
-                        "message": {
-                          "type": "string"
-                        }
-                      }
-                    }
-                  }
+                  "$ref": "#/components/schemas/ErrorEnvelope"
                 },
                 "example": {
                   "success": false,
@@ -761,7 +500,7 @@
       "get": {
         "tags": ["Customer"],
         "summary": "Search customers by name",
-        "description": "Returns a list of customers whose name matches the provided search string, wrapped in an envelope response. Response is cached by CacheInterceptor. Requires valid JWT Bearer token.",
+        "description": "Returns a list of customers matching the provided name fragment. The search is performed against the index key Upper(lastname + firstname), so the name parameter is automatically uppercased and matched from the start of the combined last+first name. Response is cached by CacheInterceptor. Requires valid JWT Bearer token.",
         "operationId": "getByName",
         "security": [
           {
@@ -773,12 +512,12 @@
             "name": "name",
             "in": "path",
             "required": true,
-            "description": "Name or partial name string to search for",
+            "description": "Name fragment to search for. Matched case-insensitively against the index key Upper(lastname + firstname).",
             "schema": {
               "type": "string",
               "minLength": 1
             },
-            "example": "Johnson"
+            "example": "JOHNSON"
           }
         ],
         "responses": {
@@ -796,43 +535,7 @@
                       "type": "array",
                       "description": "Array of matching customer objects",
                       "items": {
-                        "type": "object",
-                        "properties": {
-                          "id": {
-                            "type": "integer",
-                            "description": "Unique customer identifier"
-                          },
-                          "name": {
-                            "type": "string",
-                            "description": "Full name of the customer"
-                          },
-                          "email": {
-                            "type": "string",
-                            "format": "email",
-                            "description": "Customer email address"
-                          },
-                          "phone": {
-                            "type": "string",
-                            "description": "Customer phone number"
-                          },
-                          "address": {
-                            "type": "string",
-                            "description": "Customer street address"
-                          },
-                          "city": {
-                            "type": "string",
-                            "description": "Customer city"
-                          },
-                          "country": {
-                            "type": "string",
-                            "description": "Customer country"
-                          },
-                          "createdAt": {
-                            "type": "string",
-                            "format": "date-time",
-                            "description": "Timestamp when the customer was created"
-                          }
-                        }
+                        "$ref": "#/components/schemas/Customer"
                       }
                     }
                   }
@@ -841,24 +544,36 @@
                   "success": true,
                   "data": [
                     {
-                      "id": 42,
-                      "name": "Alice Johnson",
+                      "cust_id": "C00042",
+                      "firstname": "Alice",
+                      "lastname": "Johnson",
                       "email": "alice.johnson@example.com",
                       "phone": "+1-555-0101",
-                      "address": "123 Main Street",
+                      "street": "123 Main Street",
                       "city": "Springfield",
+                      "state": "IL",
+                      "zipcode": "62701",
                       "country": "USA",
-                      "createdAt": "2025-03-15T08:30:00Z"
+                      "active": true,
+                      "created": "2025-03-15",
+                      "modified": "2025-03-15",
+                      "notes": ""
                     },
                     {
-                      "id": 87,
-                      "name": "Mark Johnson",
+                      "cust_id": "C00087",
+                      "firstname": "Mark",
+                      "lastname": "Johnson",
                       "email": "mark.johnson@example.com",
                       "phone": "+1-555-0199",
-                      "address": "789 Elm Street",
+                      "street": "789 Elm Street",
                       "city": "Capital City",
+                      "state": "TX",
+                      "zipcode": "78701",
                       "country": "USA",
-                      "createdAt": "2025-06-01T11:45:00Z"
+                      "active": true,
+                      "created": "2025-06-01",
+                      "modified": "2025-06-01",
+                      "notes": ""
                     }
                   ]
                 }
@@ -870,23 +585,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean"
-                    },
-                    "error": {
-                      "type": "object",
-                      "properties": {
-                        "code": {
-                          "type": "integer"
-                        },
-                        "message": {
-                          "type": "string"
-                        }
-                      }
-                    }
-                  }
+                  "$ref": "#/components/schemas/ErrorEnvelope"
                 },
                 "example": {
                   "success": false,
@@ -916,15 +615,7 @@
                       }
                     },
                     "error": {
-                      "type": "object",
-                      "properties": {
-                        "code": {
-                          "type": "integer"
-                        },
-                        "message": {
-                          "type": "string"
-                        }
-                      }
+                      "$ref": "#/components/schemas/ErrorDetail"
                     }
                   }
                 },
@@ -933,7 +624,7 @@
                   "data": [],
                   "error": {
                     "code": 404,
-                    "message": "No customers found matching: Johnson"
+                    "message": "No customers found matching: JOHNSON"
                   }
                 }
               }
@@ -944,23 +635,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean"
-                    },
-                    "error": {
-                      "type": "object",
-                      "properties": {
-                        "code": {
-                          "type": "integer"
-                        },
-                        "message": {
-                          "type": "string"
-                        }
-                      }
-                    }
-                  }
+                  "$ref": "#/components/schemas/ErrorEnvelope"
                 },
                 "example": {
                   "success": false,
@@ -977,6 +652,166 @@
     }
   },
   "components": {
+    "schemas": {
+      "Customer": {
+        "type": "object",
+        "description": "Customer record as stored in and returned from the customer.dbf workarea",
+        "properties": {
+          "cust_id": {
+            "type": "string",
+            "maxLength": 8,
+            "description": "Unique customer identifier (C,8 character field)"
+          },
+          "firstname": {
+            "type": "string",
+            "maxLength": 50,
+            "description": "First name of the customer"
+          },
+          "lastname": {
+            "type": "string",
+            "maxLength": 50,
+            "description": "Last name of the customer"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 100,
+            "description": "Customer email address"
+          },
+          "phone": {
+            "type": "string",
+            "maxLength": 20,
+            "description": "Customer phone number"
+          },
+          "street": {
+            "type": "string",
+            "maxLength": 100,
+            "description": "Customer street address"
+          },
+          "city": {
+            "type": "string",
+            "maxLength": 50,
+            "description": "Customer city"
+          },
+          "state": {
+            "type": "string",
+            "maxLength": 50,
+            "description": "Customer state or region"
+          },
+          "zipcode": {
+            "type": "string",
+            "maxLength": 10,
+            "description": "Customer ZIP or postal code"
+          },
+          "country": {
+            "type": "string",
+            "maxLength": 50,
+            "description": "Customer country"
+          },
+          "active": {
+            "type": "boolean",
+            "description": "Indicates whether the customer account is active"
+          },
+          "created": {
+            "type": "string",
+            "format": "date",
+            "description": "Date when the customer record was created (set automatically on first save)"
+          },
+          "modified": {
+            "type": "string",
+            "format": "date",
+            "description": "Date when the customer record was last modified (updated on every save)"
+          },
+          "notes": {
+            "type": "string",
+            "description": "Additional notes about the customer (memo field)"
+          }
+        }
+      },
+      "CustomerInput": {
+        "type": "object",
+        "description": "Customer data submitted for create or update operations. The cust_id is never part of the body — it is always taken from the path parameter.",
+        "required": ["firstname", "lastname", "email"],
+        "properties": {
+          "firstname": {
+            "type": "string",
+            "maxLength": 50,
+            "description": "First name of the customer"
+          },
+          "lastname": {
+            "type": "string",
+            "maxLength": 50,
+            "description": "Last name of the customer"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 100,
+            "description": "Customer email address"
+          },
+          "phone": {
+            "type": "string",
+            "maxLength": 20,
+            "description": "Customer phone number"
+          },
+          "street": {
+            "type": "string",
+            "maxLength": 100,
+            "description": "Customer street address"
+          },
+          "city": {
+            "type": "string",
+            "maxLength": 50,
+            "description": "Customer city"
+          },
+          "state": {
+            "type": "string",
+            "maxLength": 50,
+            "description": "Customer state or region"
+          },
+          "zipcode": {
+            "type": "string",
+            "maxLength": 10,
+            "description": "Customer ZIP or postal code"
+          },
+          "country": {
+            "type": "string",
+            "maxLength": 50,
+            "description": "Customer country"
+          },
+          "active": {
+            "type": "boolean",
+            "description": "Indicates whether the customer account is active"
+          },
+          "notes": {
+            "type": "string",
+            "description": "Additional notes about the customer"
+          }
+        }
+      },
+      "ErrorDetail": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "ErrorEnvelope": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "error": {
+            "$ref": "#/components/schemas/ErrorDetail"
+          }
+        }
+      }
+    },
     "securitySchemes": {
       "BearerAuth": {
         "type": "http",
