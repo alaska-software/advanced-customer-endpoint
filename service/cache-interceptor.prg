@@ -72,17 +72,17 @@ METHOD CacheInterceptor:before( oHandler, cMethod, aParams )
   cCacheKey := ::buildCacheKey( cMethod, aParams )
 
   // Check if result is cached
-  IF ::Cache:isDefined( cCacheKey )
-    xCached := ::Cache:&cCacheKey
+  IF IsMemberVar(::Cache, cCacheKey )
+    xCached := ::Cache:getNoIVar( cCacheKey )
 
-    XppRtFileLogger():debug( "Cache HIT for " + cMethod )
+    XppRtFileLogger():warning( "Cache HIT for " + cMethod )
 
     // Short-circuit with cached result
     ::voteIgnore( xCached )
     RETURN SELF
   ENDIF
 
-  XppRtFileLogger():debug( "Cache MISS for " + cMethod )
+  XppRtFileLogger():warning( "Cache MISS for " + cMethod )
 
   // Not in cache - continue to method execution
   ::voteCommit()
@@ -108,6 +108,6 @@ METHOD CacheInterceptor:after( oHandler, cMethod, xResult )
   // Store result in cache
   ::Cache:setNoIvar( cCacheKey, xResult )
 
-  XppRtFileLogger():debug( "Cached result for " + cMethod )
+  XppRtFileLogger():warning( "Cached result for " + cMethod )
 
 RETURN xResult  // Pass through
