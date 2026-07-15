@@ -37,6 +37,8 @@ ENDCLASS
 /// Initialize class-level defaults
 /// </summary>
 ///
+/// <returns>Self: class reference after initialization</returns>
+///
 CLASS METHOD AuthService:initClass()
   ::_JwtSecret := AUTH_SECRET
 RETURN SELF
@@ -45,6 +47,8 @@ RETURN SELF
 /// <summary>
 /// Set the JWT signing secret (optional - for testing)
 /// </summary>
+///
+/// <param name="cSecret">New JWT signing secret; ignored if empty</param>
 ///
 CLASS METHOD AuthService:setJwtSecret( cSecret )
   IF !Empty(cSecret)
@@ -57,6 +61,8 @@ RETURN
 /// Get the JWT signing secret (for testing purposes)
 /// </summary>
 ///
+/// <returns>String: the current JWT signing secret</returns>
+///
 CLASS METHOD AuthService:getJwtSecret()
 RETURN ::_JwtSecret
 
@@ -64,8 +70,9 @@ RETURN ::_JwtSecret
 /// <summary>
 /// Validate a JWT authorization token
 /// </summary>
+///
 /// <param name="cToken">The authorization token (e.g., "Bearer <jwt>")</param>
-/// <returns>Logical - .T. if valid, .F. otherwise</returns>
+/// <returns>Logical: .T. if valid, .F. otherwise</returns>
 ///
 CLASS METHOD AuthService:validateToken( cToken )
   LOCAL cTokenValue, oJwt, oPayload
@@ -104,9 +111,10 @@ RETURN .T.
 /// <summary>
 /// Authenticate a user with credentials
 /// </summary>
+///
 /// <param name="cUser">Username</param>
 /// <param name="cPassword">Password</param>
-/// <returns>Logical - .T. if credentials are valid, .F. otherwise</returns>
+/// <returns>Logical: .T. if credentials are valid, .F. otherwise</returns>
 ///
 CLASS METHOD AuthService:authenticateUser( cUser, cPassword )
   // Demo implementation - accepts hard-coded user
@@ -117,9 +125,10 @@ RETURN cUser == "alice" .AND. cPassword == "secret"
 /// <summary>
 /// Generate a JWT token for an authenticated user
 /// </summary>
+///
 /// <param name="cUser">Username (subject)</param>
 /// <param name="cRole">User role (optional, defaults to "user")</param>
-/// <returns>String - JWT token</returns>
+/// <returns>String: signed JWT token</returns>
 ///
 CLASS METHOD AuthService:generateToken( cUser, cRole )
   LOCAL oPayload, oJwt, cToken

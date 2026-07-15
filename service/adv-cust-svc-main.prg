@@ -1,25 +1,42 @@
 //////////////////////////////////////////////////////////////////////
 ///
 /// <summary>
-/// add your summary
+/// Service entry point for the Advanced Customer Service
 /// </summary>
 ///
-///
 /// <remarks>
+/// Configures and processes command-line arguments for service control
+/// (start, stop, install, uninstall), recovery manager commands, and
+/// the primary run modes (exe / svc). Delegates all actual service
+/// logic to the AdvCustSvc microservice class.
 /// </remarks>
 ///
-///
-/// <todo>
-/// </todo>
-///
 /// <copyright>
-///
+/// Alaska Software Inc. (c) 2026. All rights reserved.
 /// </copyright>
 ///
 //////////////////////////////////////////////////////////////////////
 
 #include "Common.ch"
 
+
+/// <summary>
+/// Loads and builds the database engine drivers before Main() is called.
+/// Invoked automatically by the Xbase++ runtime.
+/// </summary>
+///
+PROCEDURE DbeSys()
+  DbeLoad("foxdbe")
+  DbeLoad("cdxdbe")
+  DbeBuild("FOXCDX","FOXDBE","CDXDBE")
+RETURN
+
+
+/// <summary>
+/// Parses command-line arguments, registers service and run-mode options,
+/// starts up the service, and processes the requested action.
+/// </summary>
+///
 PROCEDURE Main
   LOCAL n, aParameters
   LOCAL cServiceName
@@ -71,5 +88,11 @@ PROCEDURE Main
   ENDIF
 RETURN
 
+
+/// <summary>
+/// Application system procedure. No-op — UI initialisation is suppressed
+/// for headless service operation.
+/// </summary>
+///
 PROCEDURE AppSys
 RETURN

@@ -1,28 +1,24 @@
 //////////////////////////////////////////////////////////////////////
 ///
 /// <summary>
-/// This experimental workarea container serves two distinct purposes.
-/// - it encapsulates the workarea resorces such as tables and orders and
-///   simplifies / unifies WA data access in means of open/close operation.
-/// - Tt is a stateless container, meaning we do not care about any state
-///   of the workarea, we only care about the current active workkarea and
-///   ensure that after open the current area holds the table with orders
-///   and a close does restore the previous active workarea.
+/// Stateless workarea container base class
 /// </summary>
 ///
 /// <remarks>
-/// The point with that implementation is the performance gain due to the
-/// fact that instead of permanently performing a DbeUseArea/DbCloseArea
-/// operation for accessing tables and orders the WAContainer uses
-/// DbRelease()/DbRequest(). Meaning, the used workarea is released to
-/// the zero workspace and another thread can grab that ready to use
-/// workarea at no cost.
+/// This experimental workarea container serves two distinct purposes:
+/// it encapsulates the workarea resources such as tables and orders and
+/// simplifies / unifies WA data access in means of open/close operation;
+/// and it is a stateless container, meaning we do not care about any state
+/// of the workarea - we only care about the current active workarea and
+/// ensure that after open the current area holds the table with orders,
+/// and that close restores the previous active workarea.
 /// <para/>
-/// That way the WAContainer saves us a lot of workload in a multithreaded
-/// stateless implementation. It is therefore a perfect fit for a service
-/// or web handler and its workloads.
+/// The performance gain comes from using DbRelease()/DbRequest() instead
+/// of permanently performing DbeUseArea/DbCloseArea operations. The used
+/// workarea is released to the zero workspace so another thread can grab
+/// that ready-to-use workarea at no cost. This makes WAContainer a perfect
+/// fit for multithreaded stateless service and web handler workloads.
 /// </remarks>
-///
 ///
 /// <copyright>
 /// Alaska Software Inc., 2023. All Rights Reserved.
@@ -63,8 +59,11 @@ ENDCLASS
 
 
 /// <summary>
-/// Creates an data container based on the prototype definition
+/// Creates a data object based on the prototype definition.
+/// Calls setupPrototype() lazily on first use.
 /// </summary>
+///
+/// <returns>Object: new DataObject populated from the prototype</returns>
 ///
 METHOD WAContainer:createDataObject()
   IF IsNull(::_Prototype)
@@ -74,10 +73,11 @@ RETURN ::_Prototype:copy()
 
 
 /// <summary>
-/// push/popWorkarea Implements a simple workarea stack, this simplifies workarea
-/// handling as it allows easily and consistently to ensure callers current workarea
-/// stays untouched.
+/// Saves the current workarea to an internal stack and activates this container's workarea.
+/// Use together with popWorkarea() to ensure the caller's active workarea is preserved.
 /// </summary>
+///
+/// <returns>Self: instance reference for fluent chaining</returns>
 ///
 METHOD WAContainer:pushWorkarea()
    IF IsNull(::_WorkareaStack)
@@ -87,6 +87,13 @@ METHOD WAContainer:pushWorkarea()
    DbSelectArea( ::_Workarea )
 RETURN SELF
 
+
+/// <summary>
+/// Restores the workarea that was active before the last pushWorkarea() call.
+/// </summary>
+///
+/// <returns>Self: instance reference for fluent chaining</returns>
+///
 METHOD WAContainer:popWorkarea()
   IF Empty(::_WorkareaStack)
     RETURN SELF
@@ -97,11 +104,15 @@ RETURN SELF
 
 
 /// <summary>
-/// open does first check if the workarea is already open in a zero workspace
-/// and tries to request it. Only if the request fails it use a new one. That way
-/// we can avoid repeated USE operations and instead can play ping pong between
-/// threads.
+/// Opens the workarea for this container. First checks whether the workarea is already
+/// available in the zero workspace and tries to request it. Only if the request fails
+/// does it call use() to open a fresh workarea. This avoids repeated USE operations
+/// and allows workareas to be exchanged between threads.
 /// </summary>
+///
+/// <param name="cAlias">Workarea alias to request from the zero workspace (optional)</param>
+/// <param name="cStatus">Output: receives "request", "use", or "failed" describing how the workarea was acquired</param>
+/// <returns>Object: WAContainer instance for the opened workarea, or NIL on failure</returns>
 ///
 CLASS METHOD  WAContainer:open(cAlias, cStatus)
   LOCAL oWAC
@@ -122,16 +133,26 @@ CLASS METHOD  WAContainer:open(cAlias, cStatus)
 RETURN oWAC
 
 
+/// <summary>
+/// Initializes the container instance with the given workarea number.
+/// </summary>
+///
+/// <param name="nArea">Workarea number to associate with this container instance</param>
+/// <returns>Self: instance reference</returns>
+///
 METHOD  WAContainer:init(nArea)
   ::_Workarea := nArea
   ::_WorkareaStack := {}
 RETURN
 
+
 /// <summary>
-/// close does first try to release to workarea to the zero workspace
-/// instead of closing it. If that was successfull another thread can grab
-/// that WA so we do not need to close.
+/// Releases the workarea back to the zero workspace so another thread can reuse it.
+/// Falls back to DbCloseArea() if DbRelease() fails.
 /// </summary>
+///
+/// <param name="cStatus">Output: receives "release" or "close" describing how the workarea was freed</param>
+/// <returns>Self: instance reference</returns>
 ///
 METHOD  WAContainer:close( cStatus )
   LOCAL oE
@@ -150,13 +171,26 @@ METHOD  WAContainer:close( cStatus )
   ::popWorkarea()
 RETURN SELF
 
+
 /// <summary>
-/// Creates a default DO
+/// Returns a default DataObject pre-populated with empty field values
+/// as defined by the prototype.
 /// </summary>
+///
+/// <returns>Object: default DataObject for this workarea</returns>
 ///
 METHOD WAContainer:getDefault()
 RETURN ::createDataObject()
 
+
+/// <summary>
+/// Attempts to acquire a record lock on the current workarea record,
+/// retrying up to 100 times with brief sleeps between attempts.
+/// Logs an error if the lock cannot be acquired.
+/// </summary>
+///
+/// <returns>Logical: .T. if the record lock was acquired, .F. on timeout</returns>
+///
 METHOD WAContainer:tryRecordLock()
   LOCAL nRetry := 100
   DO WHILE !(::_Workarea)->(DbRLock()) .AND. nRetry>0
@@ -169,9 +203,13 @@ METHOD WAContainer:tryRecordLock()
   ENDIF
 RETURN .T.
 
+
+/// <summary>
+/// Releases the record lock on the current workarea record.
+/// </summary>
+///
+/// <returns>Logical: .T. always</returns>
+///
 METHOD WAContainer:doRecordUnlock()
   (::_Workarea)->(DbRUnLock())
 RETURN .T.
-
-
-

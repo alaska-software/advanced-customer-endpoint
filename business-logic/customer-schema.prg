@@ -45,7 +45,6 @@ FUNCTION CreateCustomerTable( cPath )
 
 RETURN lSuccess
 
-
 /// <summary>
 /// Returns the customer table structure definition
 /// </summary>
@@ -87,6 +86,7 @@ RETURN aStruct
 FUNCTION CreateCustomerIndexes()
    LOCAL lSuccess := .F.
    FIELD cust_id, lastname, firstname, email, city, active
+
    IF !Used()
       RETURN .F.
    ENDIF

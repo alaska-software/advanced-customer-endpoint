@@ -37,6 +37,9 @@ ENDCLASS
 /// Register authentication routes on the endpoint
 /// </summary>
 ///
+/// <param name="oEndpoint">REST endpoint instance (unused directly; registration uses class methods)</param>
+/// <returns>Self: class reference</returns>
+///
 CLASS METHOD AuthHandler:onRegister( oEndpoint )
   // POST body (application/json) arrives as a DataObject
   ::addType( "credentials", "O" )
@@ -53,7 +56,7 @@ RETURN SELF
 /// Authenticates the user and returns a signed JWT on success
 /// </summary>
 /// <param name="oCredentials">DataObject with user and password fields</param>
-/// <returns>DataObject with token, tokenType, and expiresIn fields</returns>
+/// <returns>Object: DataObject with token, tokenType, and expiresIn fields, or NIL with HTTP 400/401 set on failure</returns>
 ///
 METHOD AuthHandler:login( oCredentials )
   LOCAL oResult, cToken

@@ -24,7 +24,12 @@ PROCEDURE Main
   /* we use the ansi charset by default */
   SET CHARSET TO ANSI
 
-  CreateCustomerTable( "./" )
-  CreateCustomerIndexes()
+  DbeLoad("foxdbe")
+  DbeLoad("cdxdbe")
+  DbeBuild("FOXCDX","FOXDBE","CDXDBE")
 
+  CreateCustomerTable( "./" )
+  USE customer
+  CreateCustomerIndexes()
+  CLOSE ALL
 RETURN

@@ -31,6 +31,11 @@ ENDCLASS
 /// Validates a Bearer token before method execution using AuthService
 /// </summary>
 ///
+/// <param name="oHandler">RestHandler instance providing access to the HTTP request and setError()</param>
+/// <param name="cMethod">Name of the handler method about to be executed (unused)</param>
+/// <param name="aParams">Array of method parameters (unused)</param>
+/// <returns>Self: instance reference</returns>
+///
 METHOD AuthInterceptor:before( oHandler, cMethod, aParams )
   LOCAL cAuth
 

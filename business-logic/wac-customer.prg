@@ -1,6 +1,20 @@
-// WACCustomer.prg
-// Workarea Container class for customer.dbf
-// Auto-generated from customer table data model
+//////////////////////////////////////////////////////////////////////
+///
+/// <summary>
+/// Workarea Container for the customer.dbf table
+/// </summary>
+///
+/// <remarks>
+/// Concrete WAContainer subclass for the customer table.
+/// Handles table open/close, field mapping, and timestamp maintenance
+/// (created and modified) transparently in toWorkarea().
+/// </remarks>
+///
+/// <copyright>
+/// Alaska Software Inc. (c) 2026. All rights reserved.
+/// </copyright>
+///
+//////////////////////////////////////////////////////////////////////
 
 CLASS WACCustomer FROM WAContainer
   PROTECTED:
@@ -13,11 +27,26 @@ CLASS WACCustomer FROM WAContainer
   METHOD toWorkarea()
 ENDCLASS
 
+
+/// <summary>
+/// Sets the file-system path used when opening the customer table.
+/// </summary>
+///
+/// <param name="cPath">Path to the directory containing customer.dbf and customer.cdx</param>
+/// <returns>Self: class reference for fluent chaining</returns>
+///
 CLASS METHOD WACCustomer:setPath(cPath)
   ::_Path := cPath
 RETURN SELF
 
-// Opens the customer table with its compound index file
+
+/// <summary>
+/// Opens the customer table with its compound index file.
+/// Resolves the path from ConfigManager when no explicit path has been set via setPath().
+/// </summary>
+///
+/// <returns>Self: class reference</returns>
+///
 CLASS METHOD WACCustomer:use()
   LOCAL cPath, oNode
 
@@ -45,7 +74,14 @@ CLASS METHOD WACCustomer:use()
   USE (cPath+"customer.dbf") INDEX (cPath+"customer.cdx") NEW ALIAS customer
 RETURN SELF
 
-// Sets up the prototype DataObject with all customer fields and their empty default values
+
+/// <summary>
+/// Sets up the prototype DataObject with all customer fields and their empty default values.
+/// Called lazily on first use via WAContainer:createDataObject().
+/// </summary>
+///
+/// <returns>Self: instance reference</returns>
+///
 METHOD WACCustomer:setupPrototype()
   ::_Prototype              := DataObject():new()
 
@@ -70,9 +106,16 @@ METHOD WACCustomer:setupPrototype()
   ::_Prototype:notes        := ""           // M,10
 RETURN SELF
 
-// Writes the DataObject back to the workarea
-// Sets modified to current date before saving
-// Sets created to current date only if it is empty (new record)
+
+/// <summary>
+/// Writes a DataObject back to the current workarea record.
+/// Sets modified to today's date on every write.
+/// Sets created to today's date only when the field is empty (new record).
+/// </summary>
+///
+/// <param name="oE">DataObject containing the field values to write</param>
+/// <returns>Object: the DataObject after timestamp fields have been updated</returns>
+///
 METHOD WACCustomer:toWorkarea(oE)
   // Set modified (acts as the "updated" timestamp) to today's date
   oE:modified := Date()
@@ -85,8 +128,15 @@ METHOD WACCustomer:toWorkarea(oE)
   GATHER NAME oE
 RETURN oE
 
-// Reads the current workarea record into a DataObject
-// Trims all character fields before returning
+
+/// <summary>
+/// Reads the current workarea record into a DataObject.
+/// All character fields are trimmed before returning.
+/// The notes memo field is returned as-is without trimming.
+/// </summary>
+///
+/// <returns>Object: DataObject populated from the current workarea record</returns>
+///
 METHOD WACCustomer:fromWorkarea()
   LOCAL oE := NIL
 
@@ -105,4 +155,3 @@ METHOD WACCustomer:fromWorkarea()
   oE:country   := AllTrim(oE:country)
   // notes is a Memo field - returned as-is (no trim)
 RETURN oE
-

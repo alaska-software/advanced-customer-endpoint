@@ -31,8 +31,13 @@ ENDCLASS
 
 
 /// <summary>
-/// Logs method entry and records start time
+/// Logs method entry and records the start time for elapsed-time calculation.
 /// </summary>
+///
+/// <param name="oHandler">RestHandler instance (unused)</param>
+/// <param name="cMethod">Name of the handler method about to execute</param>
+/// <param name="aParams">Array of method parameters (unused)</param>
+/// <returns>Self: instance reference</returns>
 ///
 METHOD LoggingInterceptor:before( oHandler, cMethod, aParams )
   LOCAL cMsg
@@ -52,8 +57,13 @@ RETURN SELF
 
 
 /// <summary>
-/// Logs method completion and execution time
+/// Logs method completion and elapsed execution time, then passes the result through.
 /// </summary>
+///
+/// <param name="oHandler">RestHandler instance (unused)</param>
+/// <param name="cMethod">Name of the completed handler method</param>
+/// <param name="xResult">The method result value, passed through unchanged</param>
+/// <returns>Value: xResult passed through unchanged</returns>
 ///
 METHOD LoggingInterceptor:after( oHandler, cMethod, xResult )
   LOCAL nElapsed, cMsg
@@ -71,8 +81,13 @@ RETURN xResult  // Pass through unchanged
 
 
 /// <summary>
-/// Logs error information
+/// Logs error information and delegates handling to the default framework mechanism.
 /// </summary>
+///
+/// <param name="oHandler">RestHandler instance (unused)</param>
+/// <param name="cMethod">Name of the handler method that failed</param>
+/// <param name="oError">Error object containing Description and other error details</param>
+/// <returns>Logical: .F. to delegate error handling to the default framework mechanism</returns>
 ///
 METHOD LoggingInterceptor:onError( oHandler, cMethod, oError )
   LOCAL cMsg

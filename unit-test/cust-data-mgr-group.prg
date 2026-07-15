@@ -55,6 +55,8 @@ CLASS CustomerDataMgrTests FROM GenericTestGroup
 
   EXPORTED:
   METHOD setup()
+  METHOD before()
+  METHOD after()
   METHOD tearDown()
   METHOD config()
 
@@ -72,7 +74,7 @@ CLASS CustomerDataMgrTests FROM GenericTestGroup
   METHOD testGetByNameNotFound()
   METHOD testGetByEmailNotFound()
   METHOD testGetByCityNotFound()
-  METHOD testGetActiveWhenNoneActive()
+  METHOD testGetActiveExcludesInactiveCustomer()
   METHOD testGetByNameCaseInsensitive()
   METHOD testGetByCityCaseInsensitive()
 
@@ -99,7 +101,6 @@ ENDCLASS
 
 
 METHOD CustomerDataMgrTests:setup()
-  LOCAL oC1, oC2, oC3
   SUPER
 
   CreateCustomerTable( "./" )
@@ -112,24 +113,34 @@ METHOD CustomerDataMgrTests:setup()
   ::cId2      := "TST-002"
   ::cId3      := "TST-003"
   ::cIdUnique := "TST-UNQ"
+RETURN
 
-  // Seed baseline records used across multiple tests
-  oC1 := buildCustomer( ::cId1, "Alice",   "Smith",   "alice@example.com",  "Springfield", "IL", .T. )
-  oC2 := buildCustomer( ::cId2, "Bob",     "Smith",   "bob@example.com",    "Springfield", "IL", .T. )
-  oC3 := buildCustomer( ::cId3, "Charlie", "Johnson", "charlie@example.com","Shelbyville",  "IL", .F. )
+
+METHOD CustomerDataMgrTests:before()
+  LOCAL oC1, oC2, oC3
+
+  // Re-seed three known fixture records before every individual test
+  oC1 := buildCustomer( ::cId1, "Alice",   "Smith",   "alice@example.com",   "Springfield", "IL", .T. )
+  oC2 := buildCustomer( ::cId2, "Bob",     "Smith",   "bob@example.com",     "Springfield", "IL", .T. )
+  oC3 := buildCustomer( ::cId3, "Charlie", "Johnson", "charlie@example.com", "Shelbyville", "IL", .F. )
 
   CustomerDataMgr():add( oC1 )
   CustomerDataMgr():add( oC2 )
   CustomerDataMgr():add( oC3 )
-RETURN
+RETURN SELF
 
 
-METHOD CustomerDataMgrTests:tearDown()
-  // Clean up all seeded test records regardless of test outcome
+METHOD CustomerDataMgrTests:after()
+  // Remove all known fixture and test-generated records after every individual test
   CustomerDataMgr():delete( ::cId1 )
   CustomerDataMgr():delete( ::cId2 )
   CustomerDataMgr():delete( ::cId3 )
   CustomerDataMgr():delete( ::cIdUnique )
+  CustomerDataMgr():delete( "CRUD01" )  // safety net for testFullCrudLifecycle
+RETURN SELF
+
+
+METHOD CustomerDataMgrTests:tearDown()
   SUPER
 RETURN
 
@@ -149,7 +160,7 @@ METHOD CustomerDataMgrTests:config()
   ::addCase("testGetByNameNotFound")
   ::addCase("testGetByEmailNotFound")
   ::addCase("testGetByCityNotFound")
-  ::addCase("testGetActiveWhenNoneActive")
+  ::addCase("testGetActiveExcludesInactiveCustomer")
   ::addCase("testGetByNameCaseInsensitive")
   ::addCase("testGetByCityCaseInsensitive")
 
@@ -218,7 +229,7 @@ RETURN SELF
 
 METHOD CustomerDataMgrTests:testGetByNameReturnsMatchingRecords()
   // getByName() with "SmithAlice" should return Alice Smith
-  // Index key: Upper(lastname + firstname)
+  // Index key: Upper(lastname - firstname)
   LOCAL aResult
   aResult := CustomerDataMgr():getByName( "SmithAlice" )
   CHECK_ARRAY_TYPE( aResult )
@@ -319,10 +330,9 @@ METHOD CustomerDataMgrTests:testGetByCityNotFound()
 RETURN SELF
 
 
-METHOD CustomerDataMgrTests:testGetActiveWhenNoneActive()
-  // When no active customers exist for a specific scenario,
-  // getActive() must return an empty array - validated by checking
-  // that TST-003 (inactive) is never included in active results
+METHOD CustomerDataMgrTests:testGetActiveExcludesInactiveCustomer()
+  // getActive() must never include an inactive customer (TST-003, active=.F.)
+  // TST-001 and TST-002 are active; TST-003 is explicitly inactive
   LOCAL aResult, i
   aResult := CustomerDataMgr():getActive()
   CHECK_ARRAY_TYPE( aResult )
@@ -341,12 +351,10 @@ METHOD CustomerDataMgrTests:testGetByNameCaseInsensitive()
 
   CHECK_ARRAY_TYPE( aUpper )
   CHECK_ARRAY_TYPE( aLower )
+  CHECK_GREATER( Len(aUpper), 0 )
   CHECK_INT_EQUAL( Len(aUpper), Len(aLower) )
-
-  IF Len(aUpper) > 0 .AND. Len(aLower) > 0
-    CHECK_STR_EQUAL( aUpper[1]:cust_id, aLower[1]:cust_id )
-  ENDIF
-RETURN SELF
+  CHECK_STR_EQUAL( aUpper[1]:cust_id, aLower[1]:cust_id )
+  RETURN SELF
 
 
 METHOD CustomerDataMgrTests:testGetByCityCaseInsensitive()
@@ -357,8 +365,9 @@ METHOD CustomerDataMgrTests:testGetByCityCaseInsensitive()
 
   CHECK_ARRAY_TYPE( aMixed )
   CHECK_ARRAY_TYPE( aUpper )
+  CHECK_GREATER( Len(aUpper), 0 )
   CHECK_INT_EQUAL( Len(aUpper), Len(aMixed) )
-RETURN SELF
+  RETURN SELF
 
 
 // ============================================================================

@@ -36,6 +36,8 @@ ENDCLASS
 /// Initialize class-level cache storage
 /// </summary>
 ///
+/// <returns>Self: class reference after initialization</returns>
+///
 CLASS METHOD CacheInterceptor:initClass()
   ::RestInterceptor:initClass()
   ::Cache := DataObject():new()
@@ -43,8 +45,12 @@ RETURN
 
 
 /// <summary>
-/// Builds a cache key from method name and parameters
+/// Builds a cache key from method name and serialized parameters
 /// </summary>
+///
+/// <param name="cMethod">Name of the handler method</param>
+/// <param name="aParams">Array of method parameters used to differentiate cache entries</param>
+/// <returns>String: cache key derived from method name and serialized parameters</returns>
 ///
 METHOD CacheInterceptor:buildCacheKey( cMethod, aParams )
   LOCAL cKey
@@ -60,8 +66,14 @@ RETURN cKey
 
 
 /// <summary>
-/// Checks cache before method execution
+/// Checks cache before method execution. Votes to ignore (short-circuit) on a cache hit,
+/// or commits execution to proceed to the actual method on a miss.
 /// </summary>
+///
+/// <param name="oHandler">RestHandler instance (unused)</param>
+/// <param name="cMethod">Name of the handler method to look up in the cache</param>
+/// <param name="aParams">Array of method parameters used to build the cache key</param>
+/// <returns>Self: instance reference</returns>
 ///
 METHOD CacheInterceptor:before( oHandler, cMethod, aParams )
   LOCAL cCacheKey, xCached
@@ -91,8 +103,13 @@ RETURN SELF
 
 
 /// <summary>
-/// Stores result in cache after method execution
+/// Stores the method result in the cache after execution and passes the result through.
 /// </summary>
+///
+/// <param name="oHandler">RestHandler instance (unused)</param>
+/// <param name="cMethod">Name of the handler method whose result is being cached</param>
+/// <param name="xResult">The method result value to store and pass through</param>
+/// <returns>Value: xResult passed through unchanged</returns>
 ///
 METHOD CacheInterceptor:after( oHandler, cMethod, xResult )
   LOCAL cCacheKey, aParams

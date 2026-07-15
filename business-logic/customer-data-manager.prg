@@ -7,7 +7,7 @@
 /// <remarks>
 /// This class handles all CRUD operations for customer data.
 /// Uses the WAContainer pattern for efficient, stateless workarea
-/// management - modelled after the rbac-svc RbacManager / WAC* classes.
+/// management.
 /// </remarks>
 ///
 /// <copyright>
@@ -18,8 +18,16 @@
 
 #include "dmlb.ch"
 
+
+/// <summary>
+/// Evaluates the current index key expression and returns its value
+/// </summary>
+///
+/// <returns>Value: Current index key value for the active order</returns>
+///
 FUNCTION OrdKeyVal()
 RETURN &(OrdKey())
+
 
 CLASS CustomerDataMgr
   EXPORTED:
@@ -31,14 +39,18 @@ CLASS CustomerDataMgr
   CLASS METHOD getActive()
   CLASS METHOD update( cId, oCustomer )
   CLASS METHOD add( oCustomer )
+  CLASS METHOD addWithId()
   CLASS METHOD delete( cId )
 ENDCLASS
 
-/*
-  CLASS METHOD getAll()
-  Returns an array of all customer records (not deleted).
-  Uses the cust_id index for ordered traversal.
-*/
+
+/// <summary>
+/// Returns an array of all customer records (not deleted).
+/// Uses the cust_id index for ordered traversal.
+/// </summary>
+///
+/// <returns>Array: All customer records ordered by cust_id, or NIL on open failure</returns>
+///
 CLASS METHOD CustomerDataMgr:getAll()
   LOCAL oWAC, oEntry, aRet
 
@@ -60,11 +72,15 @@ CLASS METHOD CustomerDataMgr:getAll()
   oWAC:close()
 RETURN aRet
 
-/*
-  CLASS METHOD getById( cId )
-  Returns a single customer record matching the given cust_id.
-  Uses the cust_id TAG (plain field value, no transformation).
-*/
+
+/// <summary>
+/// Returns a single customer record matching the given cust_id.
+/// Uses the cust_id TAG (plain field value, no transformation).
+/// </summary>
+///
+/// <param name="cId">Customer ID to search for</param>
+/// <returns>Object: Matching customer record, or NIL if not found or on open failure</returns>
+///
 CLASS METHOD CustomerDataMgr:getById( cId )
   LOCAL oWAC, oEntry
 
@@ -83,12 +99,16 @@ CLASS METHOD CustomerDataMgr:getById( cId )
   oWAC:close()
 RETURN oEntry
 
-/*
-  CLASS METHOD getByName( cName )
-  Returns an array of customer records matching the given name fragment.
-  Index key expression: Upper( lastname + firstname )
-  cName should be passed as already-uppercased or will be uppercased here.
-*/
+
+/// <summary>
+/// Returns an array of customer records matching the given name fragment.
+/// Index key expression: Upper( lastname + firstname )
+/// cName is uppercased internally before seeking.
+/// </summary>
+///
+/// <param name="cName">Name fragment to search for (uppercased internally)</param>
+/// <returns>Array: Matching customer records, empty array if none found, or NIL on open failure</returns>
+///
 CLASS METHOD CustomerDataMgr:getByName( cName )
   LOCAL oWAC, oEntry, aRet, cSeekVal
 
@@ -106,7 +126,7 @@ CLASS METHOD CustomerDataMgr:getByName( cName )
   ENDIF
 
   aRet := {}
-  DO WHILE OrdKeyVal() = cSeekVal
+  DO WHILE OrdKeyVal() = cSeekVal .AND. !Eof()
     oEntry := oWAC:fromWorkarea()
     AAdd( aRet, oEntry )
     DbSkip(1)
@@ -115,11 +135,15 @@ CLASS METHOD CustomerDataMgr:getByName( cName )
   oWAC:close()
 RETURN aRet
 
-/*
-  CLASS METHOD getByEmail( cEmail )
-  Returns a single customer record matching the given email address.
-  Index key expression: Upper( email )
-*/
+
+/// <summary>
+/// Returns a single customer record matching the given email address.
+/// Index key expression: Upper( email )
+/// </summary>
+///
+/// <param name="cEmail">Email address to search for (uppercased internally)</param>
+/// <returns>Object: Matching customer record, or NIL if not found or on open failure</returns>
+///
 CLASS METHOD CustomerDataMgr:getByEmail( cEmail )
   LOCAL oWAC, oEntry, cSeekVal
 
@@ -140,11 +164,15 @@ CLASS METHOD CustomerDataMgr:getByEmail( cEmail )
   oWAC:close()
 RETURN oEntry
 
-/*
-  CLASS METHOD getByCity( cCity )
-  Returns an array of customer records located in the given city.
-  Index key expression: Upper( city )
-*/
+
+/// <summary>
+/// Returns an array of customer records located in the given city.
+/// Index key expression: Upper( city )
+/// </summary>
+///
+/// <param name="cCity">City name to search for (uppercased internally)</param>
+/// <returns>Array: Matching customer records, empty array if none found, or NIL on open failure</returns>
+///
 CLASS METHOD CustomerDataMgr:getByCity( cCity )
   LOCAL oWAC, oEntry, aRet, cSeekVal
 
@@ -162,7 +190,7 @@ CLASS METHOD CustomerDataMgr:getByCity( cCity )
   ENDIF
 
   aRet := {}
-  DO WHILE OrdKeyVal() = cSeekVal
+  DO WHILE OrdKeyVal() = cSeekVal .AND. !Eof()
     oEntry := oWAC:fromWorkarea()
     AAdd( aRet, oEntry )
     DbSkip(1)
@@ -171,12 +199,15 @@ CLASS METHOD CustomerDataMgr:getByCity( cCity )
   oWAC:close()
 RETURN aRet
 
-/*
-  CLASS METHOD getActive()
-  Returns an array of all active customer records.
-  Index key expression: active (logical field)
-  Seeks .T. to find all active customers.
-*/
+
+/// <summary>
+/// Returns an array of all active customer records.
+/// Index key expression: active (logical field)
+/// Seeks .T. to find all active customers.
+/// </summary>
+///
+/// <returns>Array: All active customer records, empty array if none found, or NIL on open failure</returns>
+///
 CLASS METHOD CustomerDataMgr:getActive()
   LOCAL oWAC, oEntry, aRet
 
@@ -192,7 +223,7 @@ CLASS METHOD CustomerDataMgr:getActive()
   ENDIF
 
   aRet := {}
-  DO WHILE OrdKeyVal() == .T.
+  DO WHILE OrdKeyVal() == .T. .AND. !Eof()
     oEntry := oWAC:fromWorkarea()
     AAdd( aRet, oEntry )
     DbSkip(1)
@@ -201,12 +232,17 @@ CLASS METHOD CustomerDataMgr:getActive()
   oWAC:close()
 RETURN aRet
 
-/*
-  CLASS METHOD update( cId, oCustomer )
-  Updates an existing customer record identified by cust_id.
-  Locks the record, writes the new data, then unlocks.
-  Does NOT touch created or modified fields (maintained by WAC).
-*/
+
+/// <summary>
+/// Updates an existing customer record identified by cust_id.
+/// Locks the record, writes the new data, then unlocks.
+/// Does NOT touch created or modified fields (maintained by WAC).
+/// </summary>
+///
+/// <param name="cId">Customer ID of the record to update</param>
+/// <param name="oCustomer">Customer object containing the updated field values</param>
+/// <returns>Logical: .T. if updated successfully, .F. if not found, locked, or on open failure</returns>
+///
 CLASS METHOD CustomerDataMgr:update( cId, oCustomer )
   LOCAL oWAC
 
@@ -234,13 +270,40 @@ CLASS METHOD CustomerDataMgr:update( cId, oCustomer )
   oWAC:close()
 RETURN .T.
 
-/*
-  CLASS METHOD add( oCustomer )
-  Appends a new customer record.
-  Checks for duplicate cust_id before inserting.
-  created and modified are maintained by WAC - not set here.
-*/
+
+/// <summary>
+/// Appends a new customer record with a synthetic cust_id.
+/// The ID is derived from the first 4 characters of lastname+city (uppercased)
+/// followed by the current record number zero-padded to 4 digits.
+/// Delegates the actual write to addWithId(). oCustomer is updated
+/// in-place with the saved record on success.
+/// created and modified are maintained by WAC - not set here.
+/// </summary>
+///
+/// <param name="oCustomer">Customer object with all fields except cust_id (generated here)</param>
+/// <returns>Logical: .T. if appended successfully, .F. on failure</returns>
+///
 CLASS METHOD CustomerDataMgr:add( oCustomer )
+  LOCAL lRet
+
+  // just fake a syntetic customer id
+  oCustomer:cust_id   := Upper( Left( oCustomer:lastname-oCustomer:city , 4 ) ) + StrZero( RecNo(), 4 )
+
+  lRet := ::addWithId( @oCustomer )
+RETURN lRet
+
+
+/// <summary>
+/// Appends a new customer record using the cust_id already present on oCustomer.
+/// Copies all customer fields explicitly, writes to workarea, and commits.
+/// oCustomer is refreshed in-place from the saved record on success.
+/// No duplicate cust_id check is performed.
+/// </summary>
+///
+/// <param name="oCustomer">Customer object with all fields including cust_id set</param>
+/// <returns>Logical: .T. if appended successfully, .F. on open failure</returns>
+///
+CLASS METHOD CustomerDataMgr:addWithId( oCustomer )
   LOCAL oWAC, oE
 
   oWAC := wacCustomer():open()
@@ -248,15 +311,9 @@ CLASS METHOD CustomerDataMgr:add( oCustomer )
     RETURN .F.
   ENDIF
 
-  // Check for duplicate cust_id
-  OrdSetFocus("cust_id")
-  IF DbSeek( oCustomer:cust_id )
-    oWAC:close()
-    RETURN .F.
-  ENDIF
-
   DbAppend()
   oE := oWAC:getDefault()
+
   oE:cust_id   := oCustomer:cust_id
   oE:firstname := oCustomer:firstname
   oE:lastname  := oCustomer:lastname
@@ -272,16 +329,21 @@ CLASS METHOD CustomerDataMgr:add( oCustomer )
   oWAC:toWorkarea( oE )
   DbCommit()
   oWAC:doRecordUnlock()
+  oCustomer := oWAC:fromWorkarea()
 
   oWAC:close()
 RETURN .T.
 
-/*
-  CLASS METHOD delete( cId )
-  Deletes all records matching the given cust_id.
-  Uses a DO WHILE DbSeek loop (no DbSkip) as per pattern.
-  Locks each record before deleting, then unlocks.
-*/
+
+/// <summary>
+/// Deletes all records matching the given cust_id.
+/// Uses a DO WHILE DbSeek loop (no DbSkip) as per pattern.
+/// Locks each record before deleting, then unlocks.
+/// </summary>
+///
+/// <param name="cId">Customer ID of the record(s) to delete</param>
+/// <returns>Logical: .T. if deleted successfully, .F. if not found or on open failure</returns>
+///
 CLASS METHOD CustomerDataMgr:delete( cId )
   LOCAL oWAC
 
