@@ -76,7 +76,7 @@ METHOD LoggingInterceptor:after( oHandler, cMethod, xResult )
           AllTrim(Str(nElapsed,10,3)) + "s"
 
   XppRtFileLogger():info( cMsg )
-
+  
 RETURN xResult  // Pass through unchanged
 
 

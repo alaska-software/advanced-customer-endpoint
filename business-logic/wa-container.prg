@@ -40,6 +40,7 @@ CLASS WAContainer
   CLASS METHOD open()
   METHOD init()
   METHOD close()
+  CLASS METHOD shutdown()
 
   /// <summary>
   /// Overwrite the following methods to adapt the workarea container
@@ -120,7 +121,7 @@ CLASS METHOD  WAContainer:open(cAlias, cStatus)
   DbSelectArea(0)
   cStatus := "failed"
   IF !DbRequest(cAlias)
-     ::use()
+     ::use(cAlias)
      IF Used()
        oWAC := ::new( Select() )
        cStatus := "use"
@@ -213,3 +214,10 @@ RETURN .T.
 METHOD WAContainer:doRecordUnlock()
   (::_Workarea)->(DbRUnLock())
 RETURN .T.
+
+
+CLASS METHOD  WAContainer:shutdown(cAlias)
+  DO WHILE DbRequest(cAlias)
+    DbCloseArea()
+  ENDDO
+RETURN SELF

@@ -285,9 +285,19 @@ RETURN .T.
 ///
 CLASS METHOD CustomerDataMgr:add( oCustomer )
   LOCAL lRet
+  LOCAL nRecCnt
+  LOCAL oWAC
 
-  // just fake a syntetic customer id
-  oCustomer:cust_id   := Upper( Left( oCustomer:lastname-oCustomer:city , 4 ) ) + StrZero( RecNo(), 4 )
+  // just fake a syntetic customer id if not given
+  IF Empty( oCustomer:cust_id )
+    oWAC := wacCustomer():open()
+    IF IsNull(oWAC)
+      RETURN .F.
+    ENDIF
+    nRecCnt := LastRec()+1
+    oWAC:close()
+    oCustomer:cust_id   := Upper( Left( oCustomer:lastname-oCustomer:city , 4 ) ) + StrZero( nRecCnt, 4 )
+  ENDIF
 
   lRet := ::addWithId( @oCustomer )
 RETURN lRet
@@ -297,7 +307,7 @@ RETURN lRet
 /// Appends a new customer record using the cust_id already present on oCustomer.
 /// Copies all customer fields explicitly, writes to workarea, and commits.
 /// oCustomer is refreshed in-place from the saved record on success.
-/// No duplicate cust_id check is performed.
+/// A duplicate cust_id check is performed.
 /// </summary>
 ///
 /// <param name="oCustomer">Customer object with all fields including cust_id set</param>
@@ -308,6 +318,12 @@ CLASS METHOD CustomerDataMgr:addWithId( oCustomer )
 
   oWAC := wacCustomer():open()
   IF IsNull(oWAC)
+    RETURN .F.
+  ENDIF
+
+  OrdSetFocus("cust_id")
+  IF DbSeek( oCustomer:cust_id )
+    oWAC:close()
     RETURN .F.
   ENDIF
 
@@ -361,6 +377,7 @@ CLASS METHOD CustomerDataMgr:delete( cId )
   DO WHILE DbSeek( cId )
     oWAC:tryRecordLock()
     DbDelete()
+    DbCommit()
     oWAC:doRecordUnlock()
   ENDDO
 

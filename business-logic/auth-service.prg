@@ -27,9 +27,9 @@ CLASS AuthService
   CLASS METHOD initClass()
   CLASS METHOD setJwtSecret( cSecret )
   CLASS METHOD validateToken( cToken )
-  CLASS METHOD getJwtSecret()
   CLASS METHOD authenticateUser( cUser, cPassword )
   CLASS METHOD generateToken( cUser, cRole )
+  CLASS METHOD getJwtSecret()
 ENDCLASS
 
 

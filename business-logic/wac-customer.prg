@@ -15,6 +15,8 @@
 /// </copyright>
 ///
 //////////////////////////////////////////////////////////////////////
+#include "foxdbe.ch"
+#include "cdxdbe.ch"
 
 CLASS WACCustomer FROM WAContainer
   PROTECTED:
@@ -23,6 +25,7 @@ CLASS WACCustomer FROM WAContainer
   METHOD setupPrototype()
   EXPORTED:
   CLASS METHOD setPath()
+  CLASS METHOD shutdown()
   METHOD fromWorkarea()
   METHOD toWorkarea()
 ENDCLASS
@@ -39,6 +42,9 @@ CLASS METHOD WACCustomer:setPath(cPath)
   ::_Path := cPath
 RETURN SELF
 
+CLASS METHOD WACCustomer:shutdown()
+  SUPER:shutdown("customer")
+RETURN SELF
 
 /// <summary>
 /// Opens the customer table with its compound index file.

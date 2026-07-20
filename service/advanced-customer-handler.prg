@@ -48,7 +48,7 @@ CLASS METHOD CustomerHandler:onRegister( oEndpoint )
   ::map( "GET", "/customer/::id", "getById", "envelope" )
   ::map( "GET", "/customer/search/::name", "getByName", "envelope" )
   ::map( "POST", "/customer", "create", "envelope" )
-  ::map( "PUT", "/customer/::id", "saveById", "envelope" )
+  ::map( "PUT", "/customer/::id", "updateById", "envelope" )
   ::map( "DELETE", "/customer/::id", "deleteById", "envelope" )
 
   // Register interceptors in order of execution

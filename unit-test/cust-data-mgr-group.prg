@@ -103,6 +103,9 @@ ENDCLASS
 METHOD CustomerDataMgrTests:setup()
   SUPER
 
+  FErase( "customer.dbf")
+  FErase( "customer.fpt")
+  FErase( "customer.cdx")
   CreateCustomerTable( "./" )
   USE ("./customer")
   CreateCustomerIndexes()
@@ -124,9 +127,9 @@ METHOD CustomerDataMgrTests:before()
   oC2 := buildCustomer( ::cId2, "Bob",     "Smith",   "bob@example.com",     "Springfield", "IL", .T. )
   oC3 := buildCustomer( ::cId3, "Charlie", "Johnson", "charlie@example.com", "Shelbyville", "IL", .F. )
 
-  CustomerDataMgr():add( oC1 )
-  CustomerDataMgr():add( oC2 )
-  CustomerDataMgr():add( oC3 )
+  CustomerDataMgr():addWithId( oC1 )
+  CustomerDataMgr():addWithId( oC2 )
+  CustomerDataMgr():addWithId( oC3 )
 RETURN SELF
 
 
@@ -141,6 +144,7 @@ RETURN SELF
 
 
 METHOD CustomerDataMgrTests:tearDown()
+  wacCustomer():shutdown()
   SUPER
 RETURN
 
@@ -387,7 +391,7 @@ METHOD CustomerDataMgrTests:testAddDuplicateIdFails()
   // add() with an already-existing cust_id must return .F. (duplicate guard)
   LOCAL oC, lResult
   oC      := buildCustomer( ::cId1, "Duplicate", "Person", "dup@example.com", "Nowhere", "XX", .T. )
-  lResult := CustomerDataMgr():add( oC )
+  lResult := CustomerDataMgr():addWithId( oC )
   CHECK_FALSE( lResult )
 RETURN SELF
 
@@ -396,7 +400,7 @@ METHOD CustomerDataMgrTests:testAddAppearsInGetAll()
   // After a successful add(), the new record must be retrievable via getAll()
   LOCAL oC, aAll, i, lFound
   oC := buildCustomer( ::cIdUnique, "Eve", "Turner", "eve@example.com", "Austin", "TX", .T. )
-  CustomerDataMgr():add( oC )
+  CustomerDataMgr():addWithId( oC )
 
   aAll  := CustomerDataMgr():getAll()
   lFound := .F.
@@ -513,7 +517,7 @@ METHOD CustomerDataMgrTests:testFullCrudLifecycle()
   
   // 1. Add
   oNew    := buildCustomer( cCrudId, "Frank", "Castle", "frank@example.com", "NewYork", "NY", .T. )
-  lAdd    := CustomerDataMgr():add( oNew )
+  lAdd    := CustomerDataMgr():addWithId( oNew )
   CHECK_TRUE( lAdd )
 
   // 2. Read back
