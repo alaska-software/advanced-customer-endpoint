@@ -67,7 +67,7 @@ ENDCLASS
 
 METHOD AuthLoginTestGroup:setup()
    SUPER
-   ::Endpoint := RestClient():new("http://localhost:9000")
+   ::Endpoint := RestClient():new("http://127.0.0.1:9000")
 RETURN
 
 METHOD AuthLoginTestGroup:tearDown()
