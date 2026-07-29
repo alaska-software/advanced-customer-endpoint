@@ -22,8 +22,8 @@
     INTERMEDIATE_RELEASE = .release
     POST_BUILD           = copy customer-core.dll.config ..\unit-test
     POST_BUILD           = copy customer-core.dll.config ..\run
-    DEPENDS_ON           = $(ASSETS_PATH)\configuration-manager@0.9
-    DEPENDS_ON           = $(ASSETS_PATH)\jwt-helper@1.3
+    DEPENDS_ON           = $(ASSETS_PATH)\configuration-manager
+    DEPENDS_ON           = $(ASSETS_PATH)\jwt-helper
 // $START-AUTODEPEND
     auth-service.obj
     customer-data-manager.obj
@@ -51,12 +51,12 @@
     INTERMEDIATE_RELEASE = .release
     RUNPARAMETER         = -exe
     POST_BUILD           = copy advcustsvc.exe.config $(TARGET_PATH)
-    DEPENDS_ON           = $(ASSETS_PATH)\jwt-helper@1.3
-    DEPENDS_ON           = $(ASSETS_PATH)\configuration-manager@0.9
+    DEPENDS_ON           = $(ASSETS_PATH)\jwt-helper
+    DEPENDS_ON           = $(ASSETS_PATH)\configuration-manager
     DEPENDS_ON           = business-logic\customer-core.dll
-    DEPENDS_ON           = $(ASSETS_PATH)\console-helper@0.14
-    DEPENDS_ON           = $(ASSETS_PATH)\microservice-core@0.21
-    DEPENDS_ON           = $(ASSETS_PATH)\rest-helper@0.21
+    DEPENDS_ON           = $(ASSETS_PATH)\console-helper
+    DEPENDS_ON           = $(ASSETS_PATH)\microservice-core
+    DEPENDS_ON           = $(ASSETS_PATH)\rest-helper
 // $START-AUTODEPEND
     advanced-customer-handler.obj
     adv-cust-svc-main.obj
@@ -108,9 +108,9 @@
     DEPENDS_ON           = 
     DEPENDS_ON           = business-logic\customer-core.dll
     TARGET_DIR           = .\
-    DEPENDS_ON           = $(ASSETS_PATH)\jwt-helper@1.3
-    DEPENDS_ON           = $(ASSETS_PATH)\rest-helper@0.21
-    DEPENDS_ON           = $(ASSETS_PATH)\xpp-unit@0.101
+    DEPENDS_ON           = $(ASSETS_PATH)\jwt-helper
+    DEPENDS_ON           = $(ASSETS_PATH)\rest-helper
+    DEPENDS_ON           = $(ASSETS_PATH)\xpp-unit
     RunParameter         = -g:RestCustTestGroup
 // $START-AUTODEPEND
     auth-service-group.obj
