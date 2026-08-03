@@ -20,14 +20,14 @@
 #include "common.ch"
 
 CLASS LoggingInterceptor FROM RestInterceptor
-  PROTECTED:
-  VAR StartTime
+   PROTECTED:
+      VAR StartTime
 
-  EXPORTED:
-  METHOD before( oHandler, cMethod, aParams )
-  METHOD after( oHandler, cMethod, xResult )
-  METHOD onError( oHandler, cMethod, oError )
-ENDCLASS
+   EXPORTED:
+      METHOD before( oHandler, cMethod, aParams )
+      METHOD after( oHandler, cMethod, xResult )
+      METHOD onError( oHandler, cMethod, oError )
+ ENDCLASS
 
 
 /// <summary>
@@ -40,18 +40,18 @@ ENDCLASS
 /// <returns>Self: instance reference</returns>
 ///
 METHOD LoggingInterceptor:before( oHandler, cMethod, aParams )
-  LOCAL cMsg
+   LOCAL cMsg
 
-  UNUSED(oHandler)
-  UNUSED(aParams)
+   UNUSED(oHandler)
+   UNUSED(aParams)
 
-  ::StartTime := Seconds()
+   ::StartTime := Seconds()
 
-  cMsg := "REST " + cMethod + " started"
-  XppRtFileLogger():info( cMsg )
+   cMsg := "REST " + cMethod + " started"
+   XppRtFileLogger():info( cMsg )
 
-  // Always allow execution
-  ::voteCommit()
+   // Always allow execution
+   ::voteCommit()
 
 RETURN SELF
 
@@ -66,17 +66,17 @@ RETURN SELF
 /// <returns>Value: xResult passed through unchanged</returns>
 ///
 METHOD LoggingInterceptor:after( oHandler, cMethod, xResult )
-  LOCAL nElapsed, cMsg
+   LOCAL nElapsed, cMsg
 
-  UNUSED(oHandler)
+   UNUSED(oHandler)
 
-  nElapsed := Seconds() - ::StartTime
+   nElapsed := Seconds() - ::StartTime
 
-  cMsg := "REST " + cMethod + " completed in " + ;
-          AllTrim(Str(nElapsed,10,3)) + "s"
+   cMsg := "REST " + cMethod + " completed in " + ;
+           AllTrim(Str(nElapsed,10,3)) + "s"
 
-  XppRtFileLogger():info( cMsg )
-  
+   XppRtFileLogger():info( cMsg )
+
 RETURN xResult  // Pass through unchanged
 
 
@@ -90,12 +90,13 @@ RETURN xResult  // Pass through unchanged
 /// <returns>Logical: .F. to delegate error handling to the default framework mechanism</returns>
 ///
 METHOD LoggingInterceptor:onError( oHandler, cMethod, oError )
-  LOCAL cMsg
+   LOCAL cMsg
 
-  UNUSED(oHandler)
+   UNUSED(oHandler)
 
-  cMsg := "REST " + cMethod + " failed: " + oError:Description
+   cMsg := "REST " + cMethod + " failed: " + oError:Description
 
-  XppRtFileLogger():error( cMsg )
+   XppRtFileLogger():error( cMsg )
 
 RETURN .F.  // Don't handle error, let default handling proceed
+

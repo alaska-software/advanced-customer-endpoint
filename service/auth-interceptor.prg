@@ -16,14 +16,14 @@
 /// </copyright>
 ///
 //////////////////////////////////////////////////////////////////////
- 
+
 #include "appevent.ch"
 #include "common.ch"
 #include "../business-logic/auth-service.ch"
 
 CLASS AuthInterceptor FROM RestInterceptor
-  EXPORTED:
-  METHOD before( oHandler, cMethod, aParams )
+   EXPORTED:
+      METHOD before( oHandler, cMethod, aParams )
 ENDCLASS
 
 
@@ -37,28 +37,29 @@ ENDCLASS
 /// <returns>Self: instance reference</returns>
 ///
 METHOD AuthInterceptor:before( oHandler, cMethod, aParams )
-  LOCAL cAuth
+   LOCAL cAuth
 
-  UNUSED(cMethod)
-  UNUSED(aParams)
+   UNUSED(cMethod)
+   UNUSED(aParams)
 
-  // Expect "Authorization: Bearer <token>"
-  cAuth := oHandler:HttpRequest:getHeader("Authorization")
+   // Expect "Authorization: Bearer <token>"
+   cAuth := oHandler:HttpRequest:getHeader("Authorization")
 
-  IF Empty(cAuth)
-    oHandler:setError( 401, "Missing authorization header" )
-    ::voteAbort()
-    RETURN SELF
-  ENDIF
+   IF Empty(cAuth)
+      oHandler:setError( 401, "Missing authorization header" )
+      ::voteAbort()
+      RETURN SELF
+   ENDIF
 
-  // Use AuthService to validate the token
-  IF !AuthService():validateToken( cAuth )
-    oHandler:setError( 401, "Invalid or expired token" )
-    ::voteAbort()
-    RETURN SELF
-  ENDIF
+   // Use AuthService to validate the token
+   IF !AuthService():validateToken( cAuth )
+      oHandler:setError( 401, "Invalid or expired token" )
+      ::voteAbort()
+      RETURN SELF
+   ENDIF
 
-  // Token is valid - allow request to proceed
-  ::voteCommit()
+   // Token is valid - allow request to proceed
+   ::voteCommit()
 
 RETURN SELF
+

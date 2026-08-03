@@ -61,6 +61,7 @@
 // ============================================================================
 STATIC FUNCTION buildCustomer( cId, cFirst, cLast, cEmail )
    LOCAL oC
+
    oC           := DataObject():new()
    oC:cust_id   := cId
    oC:firstname := cFirst

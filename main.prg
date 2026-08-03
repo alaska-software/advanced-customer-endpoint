@@ -21,15 +21,16 @@
  */
 PROCEDURE Main
 
-  /* we use the ansi charset by default */
-  SET CHARSET TO ANSI
+   /* we use the ansi charset by default */
+   SET CHARSET TO ANSI
 
-  DbeLoad("foxdbe")
-  DbeLoad("cdxdbe")
-  DbeBuild("FOXCDX","FOXDBE","CDXDBE")
+   DbeLoad("foxdbe")
+   DbeLoad("cdxdbe")
+   DbeBuild("FOXCDX","FOXDBE","CDXDBE")
 
-  CreateCustomerTable( "./" )
-  USE customer
-  CreateCustomerIndexes()
-  CLOSE ALL
+   CreateCustomerTable( "./" )
+   USE customer
+   CreateCustomerIndexes()
+   CLOSE ALL
 RETURN
+

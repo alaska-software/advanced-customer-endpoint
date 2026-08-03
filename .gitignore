@@ -1,0 +1,7 @@
+run
+.assets
+.debug
+.release
+project.*.layout.*
+project.xpj.*
+project.backup

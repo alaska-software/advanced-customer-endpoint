@@ -20,16 +20,17 @@
 #include "common.ch"
 
 CLASS CacheInterceptor FROM RestInterceptor
-  PROTECTED:
-  CLASS VAR Cache
+   PROTECTED:
+      CLASS VAR Cache
 
-  METHOD buildCacheKey( cMethod, aParams )
+      METHOD buildCacheKey( cMethod, aParams )
 
-  EXPORTED:
-  CLASS METHOD initClass()
-  METHOD before( oHandler, cMethod, aParams )
-  METHOD after( oHandler, cMethod, xResult )
-ENDCLASS
+   EXPORTED:
+      CLASS METHOD initClass()
+
+      METHOD before( oHandler, cMethod, aParams )
+      METHOD after( oHandler, cMethod, xResult )
+ ENDCLASS
 
 
 /// <summary>
@@ -39,8 +40,8 @@ ENDCLASS
 /// <returns>Self: class reference after initialization</returns>
 ///
 CLASS METHOD CacheInterceptor:initClass()
-  ::RestInterceptor:initClass()
-  ::Cache := DataObject():new()
+   ::RestInterceptor:initClass()
+   ::Cache := DataObject():new()
 RETURN
 
 
@@ -53,14 +54,14 @@ RETURN
 /// <returns>String: cache key derived from method name and serialized parameters</returns>
 ///
 METHOD CacheInterceptor:buildCacheKey( cMethod, aParams )
-  LOCAL cKey
+   LOCAL cKey
 
-  // Create unique key from method and parameters
-  cKey := cMethod
+   // Create unique key from method and parameters
+   cKey := cMethod
 
-  IF Len(aParams) > 0
-    cKey := cKey + ":" + Var2Json(aParams)
-  ENDIF
+   IF Len(aParams) > 0
+      cKey := cKey + ":" + Var2Json(aParams)
+   ENDIF
 
 RETURN cKey
 
@@ -76,28 +77,28 @@ RETURN cKey
 /// <returns>Self: instance reference</returns>
 ///
 METHOD CacheInterceptor:before( oHandler, cMethod, aParams )
-  LOCAL cCacheKey, xCached
+   LOCAL cCacheKey, xCached
 
-  UNUSED(oHandler)
+   UNUSED(oHandler)
 
-  // Build cache key
-  cCacheKey := ::buildCacheKey( cMethod, aParams )
+   // Build cache key
+   cCacheKey := ::buildCacheKey( cMethod, aParams )
 
-  // Check if result is cached
-  IF IsMemberVar(::Cache, cCacheKey )
-    xCached := ::Cache:getNoIVar( cCacheKey )
+   // Check if result is cached
+   IF IsMemberVar(::Cache, cCacheKey )
+      xCached := ::Cache:getNoIVar( cCacheKey )
 
-    XppRtFileLogger():warning( "Cache HIT for " + cMethod )
+      XppRtFileLogger():warning( "Cache HIT for " + cMethod )
 
-    // Short-circuit with cached result
-    ::voteIgnore( xCached )
-    RETURN SELF
-  ENDIF
+      // Short-circuit with cached result
+      ::voteIgnore( xCached )
+      RETURN SELF
+   ENDIF
 
-  XppRtFileLogger():warning( "Cache MISS for " + cMethod )
+   XppRtFileLogger():warning( "Cache MISS for " + cMethod )
 
-  // Not in cache - continue to method execution
-  ::voteCommit()
+   // Not in cache - continue to method execution
+   ::voteCommit()
 
 RETURN SELF
 
@@ -112,19 +113,20 @@ RETURN SELF
 /// <returns>Value: xResult passed through unchanged</returns>
 ///
 METHOD CacheInterceptor:after( oHandler, cMethod, xResult )
-  LOCAL cCacheKey, aParams
+   LOCAL cCacheKey, aParams
 
-  UNUSED(oHandler)
+   UNUSED(oHandler)
 
-  // Note: In a full implementation, we'd need to get parameters
-  // For this example, we'll cache based on method name only
-  aParams := {}  // Simplified
+   // Note: In a full implementation, we'd need to get parameters
+   // For this example, we'll cache based on method name only
+   aParams := {}  // Simplified
 
-  cCacheKey := ::buildCacheKey( cMethod, aParams )
+   cCacheKey := ::buildCacheKey( cMethod, aParams )
 
-  // Store result in cache
-  ::Cache:setNoIvar( cCacheKey, xResult )
+   // Store result in cache
+   ::Cache:setNoIvar( cCacheKey, xResult )
 
-  XppRtFileLogger():warning( "Cached result for " + cMethod )
+   XppRtFileLogger():warning( "Cached result for " + cMethod )
 
 RETURN xResult  // Pass through
+

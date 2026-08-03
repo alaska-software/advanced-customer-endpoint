@@ -19,14 +19,14 @@
 #include "common.ch"
 
 CLASS CustomerHandler FROM RestHandler
-  EXPORTED:
-  CLASS METHOD onRegister( oEndpoint )
-  METHOD getAll()
-  METHOD getById( cId )
-  METHOD getByName( cName )
-  METHOD updateById( cId, oCustomer )
-  METHOD create()
-  METHOD deleteById( cId )
+   EXPORTED:
+      CLASS METHOD onRegister( oEndpoint )
+      METHOD getAll()
+      METHOD getById( cId )
+      METHOD getByName( cName )
+      METHOD updateById( cId, oCustomer )
+      METHOD create()
+      METHOD deleteById( cId )
 ENDCLASS
 
 
@@ -38,32 +38,32 @@ ENDCLASS
 ///
 CLASS METHOD CustomerHandler:onRegister( oEndpoint )
 
-  // Register parameter types
-  ::addType( "id", "C" )
-  ::addType( "name", "C" )
-  ::addType( "customer", "O" )
+   // Register parameter types
+   ::addType( "id", "C" )
+   ::addType( "name", "C" )
+   ::addType( "customer", "O" )
 
-  // Register routes
-  ::map( "GET", "/customer/all", "getAll", "envelope" )
-  ::map( "GET", "/customer/::id", "getById", "envelope" )
-  ::map( "GET", "/customer/search/::name", "getByName", "envelope" )
-  ::map( "POST", "/customer", "create", "envelope" )
-  ::map( "PUT", "/customer/::id", "updateById", "envelope" )
-  ::map( "DELETE", "/customer/::id", "deleteById", "envelope" )
+   // Register routes
+   ::map( "GET", "/customer/all", "getAll", "envelope" )
+   ::map( "GET", "/customer/::id", "getById", "envelope" )
+   ::map( "GET", "/customer/search/::name", "getByName", "envelope" )
+   ::map( "POST", "/customer", "create", "envelope" )
+   ::map( "PUT", "/customer/::id", "updateById", "envelope" )
+   ::map( "DELETE", "/customer/::id", "deleteById", "envelope" )
 
-  // Register interceptors in order of execution
-  // Note: Interceptors execute in registration order
+   // Register interceptors in order of execution
+   // Note: Interceptors execute in registration order
 
-  // 1. Logging for all methods - executes first
-  ::addInterceptor( "LoggingInterceptor", NIL )
+   // 1. Logging for all methods - executes first
+   ::addInterceptor( "LoggingInterceptor", NIL )
 
-  // 2. Authentication for all methods - executes second
-  ::addInterceptor( "AuthInterceptor", NIL )
+   // 2. Authentication for all methods - executes second
+   ::addInterceptor( "AuthInterceptor", NIL )
 
-  // 3. Caching only for read operations - executes third
-  ::addInterceptor( "CacheInterceptor", {"getAll", "getById", "getByName"} )
+   // 3. Caching only for read operations - executes third
+   ::addInterceptor( "CacheInterceptor", {"getAll", "getById", "getByName"} )
 
-  UNUSED(oEndpoint)
+   UNUSED(oEndpoint)
 RETURN
 
 
@@ -74,10 +74,10 @@ RETURN
 /// <returns>Array: all customer records, or NIL on data access failure</returns>
 ///
 METHOD CustomerHandler:getAll()
-  LOCAL aCustomers
+   LOCAL aCustomers
 
-  // Business logic
-  aCustomers := CustomerDataMgr():getAll()
+   // Business logic
+   aCustomers := CustomerDataMgr():getAll()
 
 RETURN aCustomers
 
@@ -90,15 +90,15 @@ RETURN aCustomers
 /// <returns>Object: matching customer record, or NIL with HTTP 404 set if not found</returns>
 ///
 METHOD CustomerHandler:getById( cId )
-  LOCAL oCustomer
+   LOCAL oCustomer
 
-  // Business logic
-  oCustomer := CustomerDataMgr():getById( cId )
+   // Business logic
+   oCustomer := CustomerDataMgr():getById( cId )
 
-  IF IsNull(oCustomer)
-    ::setError( 404, "Customer not found" )
-    RETURN NIL
-  ENDIF
+   IF IsNull(oCustomer)
+     ::setError( 404, "Customer not found" )
+     RETURN NIL
+   ENDIF
 
 RETURN oCustomer
 
@@ -111,15 +111,15 @@ RETURN oCustomer
 /// <returns>Array: matching customer records, or empty array with HTTP 404 set if none found</returns>
 ///
 METHOD CustomerHandler:getByName( cName )
-  LOCAL aCustomers
+   LOCAL aCustomers
 
-  // Business logic
-  aCustomers := CustomerDataMgr():getByName( cName )
+   // Business logic
+   aCustomers := CustomerDataMgr():getByName( cName )
 
-  IF Empty(aCustomers)
-    ::setError( 404, "No customers found matching: " + cName )
-    RETURN {}
-  ENDIF
+   IF Empty(aCustomers)
+      ::setError( 404, "No customers found matching: " + cName )
+      RETURN {}
+   ENDIF
 
 RETURN aCustomers
 
@@ -133,15 +133,15 @@ RETURN aCustomers
 /// <returns>Object: updated customer record, or NIL with HTTP 500 set on failure</returns>
 ///
 METHOD CustomerHandler:updateById( cId, oCustomer )
-  LOCAL lSuccess
+   LOCAL lSuccess
 
-  // Business logic
-  lSuccess := CustomerDataMgr():update( cId, @oCustomer )
+   // Business logic
+   lSuccess := CustomerDataMgr():update( cId, @oCustomer )
 
-  IF !lSuccess
-    ::setError( 500, "Failed to save customer" )
-    RETURN NIL
-  ENDIF
+   IF !lSuccess
+      ::setError( 500, "Failed to save customer" )
+      RETURN NIL
+   ENDIF
 
 RETURN oCustomer
 
@@ -154,14 +154,14 @@ RETURN oCustomer
 /// <returns>Object: created customer record, or NIL with HTTP 500 set on failure</returns>
 ///
 METHOD CustomerHandler:create( oCustomer )
-  LOCAL lSuccess
+   LOCAL lSuccess
 
-  lSuccess := CustomerDataMgr():add( @oCustomer )
+   lSuccess := CustomerDataMgr():add( @oCustomer )
 
-  IF !lSuccess
-    ::setError( 500, "Failed to create customer" )
-    RETURN NIL
-  ENDIF
+   IF !lSuccess
+      ::setError( 500, "Failed to create customer" )
+      RETURN NIL
+   ENDIF
 
 RETURN oCustomer
 
@@ -174,13 +174,13 @@ RETURN oCustomer
 /// <returns>Logical: .T. on success, .F. with HTTP 404 set if not found</returns>
 ///
 METHOD CustomerHandler:deleteById( cId )
-  LOCAL lSuccess
+   LOCAL lSuccess
 
-  lSuccess := CustomerDataMgr():delete( cId )
+   lSuccess := CustomerDataMgr():delete( cId )
 
-  IF !lSuccess
-    ::setError( 404, "Customer not found" )
-    RETURN .F.
-  ENDIF
+   IF !lSuccess
+      ::setError( 404, "Customer not found" )
+      RETURN .F.
+   ENDIF
 
 RETURN .T.
