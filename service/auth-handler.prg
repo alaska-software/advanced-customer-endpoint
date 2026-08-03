@@ -41,6 +41,7 @@ ENDCLASS
 /// <returns>Self: class reference</returns>
 ///
 CLASS METHOD AuthHandler:onRegister( oEndpoint )
+
   // POST body (application/json) arrives as a DataObject
   ::addType( "credentials", "O" )
   ::setResultMode( "envelope" )

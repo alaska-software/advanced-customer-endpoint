@@ -84,8 +84,8 @@ CLASS METHOD AdvCustSvc:onRecover(oState)
   UNUSED(oState)
   XppRtFileLogger():warning(FormatMessage("Processing recover for(%1)",::classname()))
 
-  // $TODO add your code which is a last resort. repeated restarts failed
-RETURN SELF
+  // Enforce recover state reset
+RETURN .T.
 
 
 /// <summary>
