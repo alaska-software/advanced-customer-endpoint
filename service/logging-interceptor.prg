@@ -48,7 +48,7 @@ METHOD LoggingInterceptor:before( oHandler, cMethod, aParams )
    ::StartTime := Seconds()
 
    cMsg := "REST " + cMethod + " started"
-   XppRtFileLogger():info( cMsg )
+   XppFileLogger():info( cMsg )
 
    // Always allow execution
    ::voteCommit()
@@ -75,7 +75,7 @@ METHOD LoggingInterceptor:after( oHandler, cMethod, xResult )
    cMsg := "REST " + cMethod + " completed in " + ;
            AllTrim(Str(nElapsed,10,3)) + "s"
 
-   XppRtFileLogger():info( cMsg )
+   XppFileLogger():info( cMsg )
 
 RETURN xResult  // Pass through unchanged
 
@@ -96,7 +96,7 @@ METHOD LoggingInterceptor:onError( oHandler, cMethod, oError )
 
    cMsg := "REST " + cMethod + " failed: " + oError:Description
 
-   XppRtFileLogger():error( cMsg )
+   XppFileLogger():error( cMsg )
 
 RETURN .F.  // Don't handle error, let default handling proceed
 

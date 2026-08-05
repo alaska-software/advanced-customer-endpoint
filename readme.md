@@ -20,6 +20,13 @@ Demo credentials: **`alice` / `secret`**.
 
 ---
 
+## Checkout
+
+```bat
+git clone https://github.com/alaska-software/advanced-customer-endpoint.git 
+cd advanced-customer-endpoint
+```
+
 ## Build and Run
 
 **1. Install assets and build**
@@ -28,6 +35,7 @@ Demo credentials: **`alice` / `secret`**.
 xppam PROJECT -install
 pbuild project.xpj
 ```
+
 
 **2. Create the database**
 
@@ -46,13 +54,15 @@ The service starts on `http://localhost:9000`.
 
 **Quick smoke-test:**
 
+Obtain a token:
 ```bat
-REM obtain a token
 curl -s -X POST http://localhost:9000/auth/login ^
   -H "Content-Type: application/json" ^
   -d "{\"user\":\"alice\",\"password\":\"secret\"}"
+```
 
-REM call a protected route (paste the token from the response above)
+Call a protected route (paste the token from the response above)
+```bat
 curl -s http://localhost:9000/customer/all ^
   -H "Authorization: Bearer <token>"
 ```

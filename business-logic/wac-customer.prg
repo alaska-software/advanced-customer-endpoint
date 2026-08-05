@@ -59,17 +59,17 @@ CLASS METHOD WACCustomer:use()
   IF IsNull(::_Path)
     oNode := ConfigManager():binary
     IF IsNull(oNode)
-      XppRtFileLogger():error("No node application config file")
+      XppFileLogger():error("No node application config file")
       RETURN SELF
     ENDIF
     oNode := oNode:path
     IF IsNull(oNode)
-      XppRtFileLogger():error("No path node in application config file")
+      XppFileLogger():error("No path node in application config file")
       RETURN SELF
     ENDIF
     cPath := oNode:customer
     IF IsNull(cPath)
-      XppRtFileLogger():error("No customer attrib in path node in application config file")
+      XppFileLogger():error("No customer attrib in path node in application config file")
       RETURN SELF
     ENDIF
   ELSE

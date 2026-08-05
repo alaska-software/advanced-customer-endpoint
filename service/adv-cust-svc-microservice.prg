@@ -66,7 +66,7 @@ RETURN SUPER:afterRun()
 ///
 CLASS METHOD AdvCustSvc:onRestart(oState)
    UNUSED(oState)
-   XppRtFileLogger():warning(FormatMessage("Processing restart for(%1)",::classname()))
+   XppFileLogger():warning(FormatMessage("Processing restart for(%1)",::classname()))
 
    // $TODO add your code here
 RETURN SELF
@@ -82,7 +82,7 @@ RETURN SELF
 ///
 CLASS METHOD AdvCustSvc:onRecover(oState)
    UNUSED(oState)
-   XppRtFileLogger():warning(FormatMessage("Processing recover for(%1)",::classname()))
+   XppFileLogger():warning(FormatMessage("Processing recover for(%1)",::classname()))
 
   // Enforce recover state reset
 RETURN .T.

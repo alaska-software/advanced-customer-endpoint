@@ -99,7 +99,7 @@
     COMPILE       = xpp
     COMPILE_FLAGS = /q /w
     DEBUG         = yes
-    GUI           = yes
+    GUI           = no
     LINKER        = alink
     LINK_FLAGS    = 
     RC_COMPILE    = arc

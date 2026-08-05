@@ -199,7 +199,7 @@ METHOD WAContainer:tryRecordLock()
     Sleep(0)
   ENDDO
   IF nRetry==0
-    XppRtFileLogger():error("WAContainer failed to aquire record lock for:"+ (::_Workarea)->(Alias()))
+    XppFileLogger():error("WAContainer failed to aquire record lock for:"+ (::_Workarea)->(Alias()))
     RETURN .F.
   ENDIF
 RETURN .T.
