@@ -8,6 +8,16 @@
 /// This interceptor demonstrates how to implement caching as a
 /// cross-cutting concern. It caches method results based on method
 /// name and parameters, and returns cached results on subsequent calls.
+/// Cache entries are stored in a class-level DataObject keyed by method
+/// name and serialized parameters.
+///
+/// Cache invalidation: write operations listed in before() wipe the
+/// entire cache so stale reads cannot follow a mutation.
+///
+/// Cache bypass: callers may send the HTTP header "Cache-Control: no-cache"
+/// to force a live execution and skip both the cache lookup and storage.
+/// This is used by unit tests to prevent cached responses from interfering
+/// with test assertions.
 /// </remarks>
 ///
 /// <copyright>
@@ -22,12 +32,13 @@
 CLASS CacheInterceptor FROM RestInterceptor
    PROTECTED:
       CLASS VAR Cache
+      VAR CacheKey
 
       METHOD buildCacheKey( cMethod, aParams )
 
    EXPORTED:
       CLASS METHOD initClass()
-
+      CLASS METHOD reset()
       METHOD before( oHandler, cMethod, aParams )
       METHOD after( oHandler, cMethod, xResult )
  ENDCLASS
@@ -41,6 +52,23 @@ CLASS CacheInterceptor FROM RestInterceptor
 ///
 CLASS METHOD CacheInterceptor:initClass()
    ::RestInterceptor:initClass()
+   ::reset()
+RETURN
+
+
+/// <summary>
+/// Clears the entire class-level cache store
+/// </summary>
+///
+/// <remarks>
+/// Called at class initialization and whenever a mutation is detected
+/// in before(). Replaces the cache DataObject with a fresh instance,
+/// which effectively invalidates all previously cached entries.
+/// </remarks>
+///
+/// <returns>NIL</returns>
+///
+CLASS METHOD CacheInterceptor:reset()
    ::Cache := DataObject():new()
 RETURN
 
@@ -71,28 +99,56 @@ RETURN cKey
 /// or commits execution to proceed to the actual method on a miss.
 /// </summary>
 ///
-/// <param name="oHandler">RestHandler instance (unused)</param>
+/// <remarks>
+/// Execution order:
+/// 1. Build and store the cache key from method name and parameters.
+/// 2. If the request carries "Cache-Control: no-cache", bypass the cache
+///    entirely and vote commit so the method always executes. The result
+///    will not be stored by after() either because ::CacheKey is still set
+///    but the caller expects a fresh response.
+/// 3. If the method is a known write operation (e.g. updateById) and a
+///    cache entry exists, reset the entire cache to evict stale reads.
+/// 4. On a cache hit with a non-null value, return the stored result
+///    immediately via voteIgnore, skipping the actual method.
+/// 5. On a miss, vote commit to allow normal method execution.
+/// </remarks>
+///
+/// <param name="oHandler">RestHandler instance used to read HTTP request headers</param>
 /// <param name="cMethod">Name of the handler method to look up in the cache</param>
 /// <param name="aParams">Array of method parameters used to build the cache key</param>
 /// <returns>Self: instance reference</returns>
 ///
 METHOD CacheInterceptor:before( oHandler, cMethod, aParams )
-   LOCAL cCacheKey, xCached
+   LOCAL xCached
+   LOCAL cNoCache
 
-   UNUSED(oHandler)
+   // Build cache key and store it for use in after()
+   ::CacheKey := ::buildCacheKey( cMethod, aParams )
 
-   // Build cache key
-   cCacheKey := ::buildCacheKey( cMethod, aParams )
-
-   // Check if result is cached
-   IF IsMemberVar(::Cache, cCacheKey )
-      xCached := ::Cache:getNoIVar( cCacheKey )
-
-      XppFileLogger():warning( "Cache HIT for " + cMethod )
-
-      // Short-circuit with cached result
-      ::voteIgnore( xCached )
+   // Respect cache control
+   cNoCache := oHandler:httpRequest:getHeader("Cache-Control")
+   IF ValType(cNoCache)=="C" .AND. cNoCache=="no-cache"
+      XppFileLogger():warning( "No-Cache for " + cMethod )
+      ::voteCommit()
       RETURN SELF
+   ENDIF
+
+   // Simple mutation detection to invalidate cache
+   IF IsMemberVar(::Cache, ::CacheKey ) .AND. cMethod .IN. {"updateById"}
+      XppFileLogger():warning( "Mutation detected, invalidate cache for " + cMethod )
+      ::reset()
+
+    // Check if result is cached
+   ELSEIF IsMemberVar(::Cache, ::CacheKey )
+      xCached := ::Cache:getNoIVar( ::CacheKey )
+
+      IF !IsNull(xCached)
+        XppFileLogger():warning( "Cache HIT for " + cMethod )
+
+        // Short-circuit with cached result
+        ::voteIgnore( xCached )
+        RETURN SELF
+      ENDIF
    ENDIF
 
    XppFileLogger():warning( "Cache MISS for " + cMethod )
@@ -113,20 +169,12 @@ RETURN SELF
 /// <returns>Value: xResult passed through unchanged</returns>
 ///
 METHOD CacheInterceptor:after( oHandler, cMethod, xResult )
-   LOCAL cCacheKey, aParams
-
    UNUSED(oHandler)
+   UNUSED(cMethod)
 
-   // Note: In a full implementation, we'd need to get parameters
-   // For this example, we'll cache based on method name only
-   aParams := {}  // Simplified
-
-   cCacheKey := ::buildCacheKey( cMethod, aParams )
-
-   // Store result in cache
-   ::Cache:setNoIvar( cCacheKey, xResult )
+   // Store result in cache using the key built in before()
+   ::Cache:setNoIvar( ::CacheKey, xResult )
 
    XppFileLogger():warning( "Cached result for " + cMethod )
 
 RETURN xResult  // Pass through
-

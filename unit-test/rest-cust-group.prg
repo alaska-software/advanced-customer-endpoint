@@ -146,6 +146,7 @@ METHOD RestCustTestGroup:setup()
 
    ::cToken  := oResponse:result:token
    ::Endpoint:addHeader( "Authorization", "Bearer " + ::cToken )
+   ::Endpoint:addHeader( "Cache-Control", "no-cache" )
 RETURN
 
 
