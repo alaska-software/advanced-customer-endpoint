@@ -1,7 +1,7 @@
 [PROJECT]
     TARGET_DIR = .\run
-    Version = 3.0
     AUX.FILE = readme.md
+    Version = 3.0
     project.xpj
 
 [project.xpj]
@@ -26,17 +26,18 @@
     DEPENDS_ON           = $(ASSETS_PATH)\configuration-manager
     DEPENDS_ON           = $(ASSETS_PATH)\jwt-helper
 // $START-AUTODEPEND
+    auth-service.obj
     customer-data-manager.obj
     customer-schema.obj
     wac-customer.obj
     wa-container.obj
 // $STOP-AUTODEPEND
+    auth-service.prg
     customer-core.dll.config
     customer-data-manager.prg
     customer-schema.prg
     wac-customer.prg
     wa-container.prg
-    auth-service.prg
 
 [service\advcustsvc.exe]
     COMPILE              = xpp
@@ -108,8 +109,8 @@
     RunParameter  = -g:RestCustTestGroup
     INTERMEDIATE_DEBUG   = .debug
     INTERMEDIATE_RELEASE = .release
-    DEPENDS_ON    = 
     DEPENDS_ON    = business-logic\customer-core.dll
+    DEPENDS_ON    = $(ASSETS_PATH)\configuration-manager
     DEPENDS_ON    = $(ASSETS_PATH)\rest-helper
     DEPENDS_ON    = $(ASSETS_PATH)\jwt-helper
     DEPENDS_ON    = $(ASSETS_PATH)\xpp-unit
