@@ -56,7 +56,7 @@ CLASS METHOD CustomerDataMgr:getAll()
 
   oWAC := wacCustomer():open()
   IF IsNull(oWAC)
-    RETURN nil
+    RETURN NIL
   ENDIF
 
   OrdSetFocus("cust_id")
@@ -86,13 +86,13 @@ CLASS METHOD CustomerDataMgr:getById( cId )
 
   oWAC := wacCustomer():open()
   IF IsNull(oWAC)
-    RETURN nil
+    RETURN NIL
   ENDIF
 
   OrdSetFocus("cust_id")
   IF !DbSeek( cId )
     oWAC:close()
-    RETURN nil
+    RETURN NIL
   ENDIF
 
   oEntry := oWAC:fromWorkarea()
@@ -114,7 +114,7 @@ CLASS METHOD CustomerDataMgr:getByName( cName )
 
   oWAC := wacCustomer():open()
   IF IsNull(oWAC)
-    RETURN nil
+    RETURN NIL
   ENDIF
 
   cSeekVal := Upper( cName )
