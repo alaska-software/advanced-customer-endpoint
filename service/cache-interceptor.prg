@@ -106,11 +106,9 @@ RETURN cKey
 ///    entirely and vote commit so the method always executes. The result
 ///    will not be stored by after() either because ::CacheKey is still set
 ///    but the caller expects a fresh response.
-/// 3. If the method is a known write operation (e.g. updateById) and a
-///    cache entry exists, reset the entire cache to evict stale reads.
-/// 4. On a cache hit with a non-null value, return the stored result
+/// 3. On a cache hit with a non-null value, return the stored result
 ///    immediately via voteIgnore, skipping the actual method.
-/// 5. On a miss, vote commit to allow normal method execution.
+/// 4. On a miss, vote commit to allow normal method execution.
 /// </remarks>
 ///
 /// <param name="oHandler">RestHandler instance used to read HTTP request headers</param>
@@ -133,13 +131,8 @@ METHOD CacheInterceptor:before( oHandler, cMethod, aParams )
       RETURN SELF
    ENDIF
 
-   // Simple mutation detection to invalidate cache
-   IF IsMemberVar(::Cache, ::CacheKey ) .AND. cMethod .IN. {"updateById"}
-      XppFileLogger():warning( "Mutation detected, invalidate cache for " + cMethod )
-      ::reset()
-
-    // Check if result is cached
-   ELSEIF IsMemberVar(::Cache, ::CacheKey )
+   // Check if result is cached
+   IF IsMemberVar(::Cache, ::CacheKey )
       xCached := ::Cache:getNoIVar( ::CacheKey )
 
       IF !IsNull(xCached)
