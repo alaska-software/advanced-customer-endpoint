@@ -20,13 +20,13 @@
 #include "common.ch"
 
 CLASS AdvCustSvc FROM Microservice
-   EXPORTED:
-      CLASS METHOD beforeRun()
-      CLASS METHOD afterRun()
+  EXPORTED:
+  CLASS METHOD beforeRun()
+  CLASS METHOD afterRun()
 
-      CLASS METHOD onRestart()
-      CLASS METHOD onRecover()
-      CLASS METHOD onReady()
+  CLASS METHOD onRestart()
+  CLASS METHOD onRecover()
+  CLASS METHOD onReady()
 ENDCLASS
 
 
@@ -40,7 +40,7 @@ ENDCLASS
 /// <returns>Logical: result of the base-class beforeRun()</returns>
 ///
 CLASS METHOD AdvCustSvc:beforeRun(aParameters)
-   // $TODO add your code here which you want to be executed before your service starts
+  // $TODO add your code here which you want to be executed before your service starts
 RETURN SUPER:beforeRun(aParameters)
 
 
@@ -52,7 +52,7 @@ RETURN SUPER:beforeRun(aParameters)
 /// <returns>Logical: result of the base-class afterRun()</returns>
 ///
 CLASS METHOD AdvCustSvc:afterRun()
-   // $TODO add your code here
+  // $TODO add your code here
 RETURN SUPER:afterRun()
 
 
@@ -65,10 +65,10 @@ RETURN SUPER:afterRun()
 /// <returns>Self: class reference</returns>
 ///
 CLASS METHOD AdvCustSvc:onRestart(oState)
-   UNUSED(oState)
-   XppFileLogger():warning(FormatMessage("Processing restart for(%1)",::classname()))
+  UNUSED(oState)
+  XppFileLogger():warning(FormatMessage("Processing restart for(%1)",::classname()))
 
-   // $TODO add your code here
+  // $TODO add your code here
 RETURN SELF
 
 
@@ -81,8 +81,8 @@ RETURN SELF
 /// <returns>Self: class reference</returns>
 ///
 CLASS METHOD AdvCustSvc:onRecover(oState)
-   UNUSED(oState)
-   XppFileLogger():warning(FormatMessage("Processing recover for(%1)",::classname()))
+  UNUSED(oState)
+  XppFileLogger():warning(FormatMessage("Processing recover for(%1)",::classname()))
 
   // Enforce recover state reset
 RETURN .T.
@@ -96,5 +96,5 @@ RETURN .T.
 /// <returns>Self: class reference</returns>
 ///
 CLASS METHOD AdvCustSvc:onReady()
-   // $TODO add your code here
+  // $TODO add your code here
 RETURN SELF

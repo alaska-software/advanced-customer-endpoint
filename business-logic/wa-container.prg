@@ -81,11 +81,11 @@ RETURN ::_Prototype:copy()
 /// <returns>Self: instance reference for fluent chaining</returns>
 ///
 METHOD WAContainer:pushWorkarea()
-   IF IsNull(::_WorkareaStack)
-     ::_WorkareaStack := {}
-   ENDIF
-   AAdd( ::_WorkareaStack, Select() )
-   DbSelectArea( ::_Workarea )
+  IF IsNull(::_WorkareaStack)
+    ::_WorkareaStack := {}
+  ENDIF
+  AAdd( ::_WorkareaStack, Select() )
+  DbSelectArea( ::_Workarea )
 RETURN SELF
 
 
@@ -121,11 +121,11 @@ CLASS METHOD  WAContainer:open(cAlias, cStatus)
   DbSelectArea(0)
   cStatus := "failed"
   IF !DbRequest(cAlias)
-     ::use(cAlias)
-     IF Used()
-       oWAC := ::new( Select() )
-       cStatus := "use"
-     ENDIF
+    ::use(cAlias)
+    IF Used()
+     oWAC := ::new( Select() )
+     cStatus := "use"
+    ENDIF
   ELSE
     oWAC := ::new( Select() )
     cStatus := "request"

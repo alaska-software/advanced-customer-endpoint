@@ -30,18 +30,18 @@
 #include "common.ch"
 
 CLASS CacheInterceptor FROM RestInterceptor
-   PROTECTED:
-      CLASS VAR Cache
-      VAR CacheKey
+  PROTECTED:
+  CLASS VAR Cache
+  VAR CacheKey
 
-      METHOD buildCacheKey( cMethod, aParams )
+  METHOD buildCacheKey( cMethod, aParams )
 
-   EXPORTED:
-      CLASS METHOD initClass()
-      CLASS METHOD reset()
-      METHOD before( oHandler, cMethod, aParams )
-      METHOD after( oHandler, cMethod, xResult )
- ENDCLASS
+  EXPORTED:
+  CLASS METHOD initClass()
+  CLASS METHOD reset()
+  METHOD before( oHandler, cMethod, aParams )
+  METHOD after( oHandler, cMethod, xResult )
+ENDCLASS
 
 
 /// <summary>
@@ -51,8 +51,8 @@ CLASS CacheInterceptor FROM RestInterceptor
 /// <returns>Self: class reference after initialization</returns>
 ///
 CLASS METHOD CacheInterceptor:initClass()
-   ::RestInterceptor:initClass()
-   ::reset()
+  ::RestInterceptor:initClass()
+  ::reset()
 RETURN
 
 
@@ -69,7 +69,7 @@ RETURN
 /// <returns>NIL</returns>
 ///
 CLASS METHOD CacheInterceptor:reset()
-   ::Cache := DataObject():new()
+  ::Cache := DataObject():new()
 RETURN
 
 
@@ -82,14 +82,14 @@ RETURN
 /// <returns>String: cache key derived from method name and serialized parameters</returns>
 ///
 METHOD CacheInterceptor:buildCacheKey( cMethod, aParams )
-   LOCAL cKey
+  LOCAL cKey
 
-   // Create unique key from method and parameters
-   cKey := cMethod
+  // Create unique key from method and parameters
+  cKey := cMethod
 
-   IF Len(aParams) > 0
-      cKey := cKey + ":" + Var2Json(aParams)
-   ENDIF
+  IF Len(aParams) > 0
+    cKey := cKey + ":" + Var2Json(aParams)
+  ENDIF
 
 RETURN cKey
 
@@ -117,37 +117,37 @@ RETURN cKey
 /// <returns>Self: instance reference</returns>
 ///
 METHOD CacheInterceptor:before( oHandler, cMethod, aParams )
-   LOCAL xCached
-   LOCAL cNoCache
+  LOCAL xCached
+  LOCAL cNoCache
 
-   // Build cache key and store it for use in after()
-   ::CacheKey := ::buildCacheKey( cMethod, aParams )
+  // Build cache key and store it for use in after()
+  ::CacheKey := ::buildCacheKey( cMethod, aParams )
 
-   // Respect cache control
-   cNoCache := oHandler:httpRequest:getHeader("Cache-Control")
-   IF ValType(cNoCache)=="C" .AND. cNoCache=="no-cache"
-      XppFileLogger():warning( "No-Cache for " + cMethod )
-      ::voteCommit()
+  // Respect cache control
+  cNoCache := oHandler:httpRequest:getHeader("Cache-Control")
+  IF ValType(cNoCache)=="C" .AND. cNoCache=="no-cache"
+    XppFileLogger():warning( "No-Cache for " + cMethod )
+    ::voteCommit()
+    RETURN SELF
+  ENDIF
+
+  // Check if result is cached
+  IF IsMemberVar(::Cache, ::CacheKey )
+    xCached := ::Cache:getNoIVar( ::CacheKey )
+
+    IF !IsNull(xCached)
+      XppFileLogger():warning( "Cache HIT for " + cMethod )
+
+      // Short-circuit with cached result
+      ::voteIgnore( xCached )
       RETURN SELF
-   ENDIF
+    ENDIF
+  ENDIF
 
-   // Check if result is cached
-   IF IsMemberVar(::Cache, ::CacheKey )
-      xCached := ::Cache:getNoIVar( ::CacheKey )
+  XppFileLogger():warning( "Cache MISS for " + cMethod )
 
-      IF !IsNull(xCached)
-        XppFileLogger():warning( "Cache HIT for " + cMethod )
-
-        // Short-circuit with cached result
-        ::voteIgnore( xCached )
-        RETURN SELF
-      ENDIF
-   ENDIF
-
-   XppFileLogger():warning( "Cache MISS for " + cMethod )
-
-   // Not in cache - continue to method execution
-   ::voteCommit()
+  // Not in cache - continue to method execution
+  ::voteCommit()
 
 RETURN SELF
 
@@ -162,12 +162,12 @@ RETURN SELF
 /// <returns>Value: xResult passed through unchanged</returns>
 ///
 METHOD CacheInterceptor:after( oHandler, cMethod, xResult )
-   UNUSED(oHandler)
-   UNUSED(cMethod)
+  UNUSED(oHandler)
+  UNUSED(cMethod)
 
-   // Store result in cache using the key built in before()
-   ::Cache:setNoIvar( ::CacheKey, xResult )
+  // Store result in cache using the key built in before()
+  ::Cache:setNoIvar( ::CacheKey, xResult )
 
-   XppFileLogger():warning( "Cached result for " + cMethod )
+  XppFileLogger():warning( "Cached result for " + cMethod )
 
 RETURN xResult  // Pass through

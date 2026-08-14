@@ -2,3 +2,6 @@
 *.dll
 *.exe
 *.config
+*.cdx
+*.dbf
+*.fpt
