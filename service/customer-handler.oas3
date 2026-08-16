@@ -53,71 +53,57 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": {
-                      "type": "boolean",
-                      "description": "Indicates whether the request was successful"
-                    },
-                    "data": {
+                    "result": {
                       "type": "array",
                       "description": "Array of customer objects",
                       "items": {
                         "$ref": "#/components/schemas/Customer"
                       }
+                    },
+                    "error": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "Error message; null on success",
+                      "example": null
                     }
                   }
                 },
                 "example": {
-                  "success": true,
-                  "data": [
+                  "result": [
                     {
-                      "cust_id": "C00001",
-                      "firstname": "Alice",
-                      "lastname": "Johnson",
-                      "email": "alice.johnson@example.com",
-                      "phone": "+1-555-0101",
-                      "street": "123 Main Street",
-                      "city": "Springfield",
-                      "state": "IL",
-                      "zipcode": "62701",
-                      "country": "USA",
-                      "active": true,
-                      "created": "2025-03-15",
-                      "modified": "2025-03-15",
-                      "notes": ""
+                      "CUST_ID": "ALBE0010",
+                      "FIRSTNAME": "Alice",
+                      "LASTNAME": "Albertson",
+                      "EMAIL": "alice.albertson@example.com",
+                      "PHONE": "+1-555-0101",
+                      "STREET": "123 Main Street",
+                      "CITY": "Springfield",
+                      "STATE": "IL",
+                      "ZIPCODE": "62701",
+                      "COUNTRY": "USA",
+                      "ACTIVE": true,
+                      "CREATED": "2025-03-15",
+                      "MODIFIED": "2025-03-15",
+                      "NOTES": ""
                     },
                     {
-                      "cust_id": "C00002",
-                      "firstname": "Bob",
-                      "lastname": "Smith",
-                      "email": "bob.smith@example.com",
-                      "phone": "+1-555-0102",
-                      "street": "456 Oak Avenue",
-                      "city": "Shelbyville",
-                      "state": "TN",
-                      "zipcode": "37160",
-                      "country": "USA",
-                      "active": true,
-                      "created": "2025-04-20",
-                      "modified": "2025-04-20",
-                      "notes": ""
-                    },
-                    {
-                      "cust_id": "C00003",
-                      "firstname": "Carol",
-                      "lastname": "White",
-                      "email": "carol.white@example.com",
-                      "phone": "+49-30-123456",
-                      "street": "Berliner Str. 7",
-                      "city": "Berlin",
-                      "state": "",
-                      "zipcode": "10115",
-                      "country": "Germany",
-                      "active": true,
-                      "created": "2025-05-10",
-                      "modified": "2025-05-10",
-                      "notes": ""
+                      "CUST_ID": "JOHN0009",
+                      "FIRSTNAME": "Alice",
+                      "LASTNAME": "Johnson",
+                      "EMAIL": "alice.johnson@example.com",
+                      "PHONE": "+1-555-0101",
+                      "STREET": "123 Main Street",
+                      "CITY": "Springfield",
+                      "STATE": "IL",
+                      "ZIPCODE": "62701",
+                      "COUNTRY": "USA",
+                      "ACTIVE": true,
+                      "CREATED": "2025-04-20",
+                      "MODIFIED": "2025-04-20",
+                      "NOTES": ""
                     }
-                  ]
+                  ],
+                  "error": null
                 }
               }
             }
@@ -127,14 +113,11 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelope"
+                  "$ref": "#/components/schemas/ErrorResponse"
                 },
                 "example": {
-                  "success": false,
-                  "error": {
-                    "code": 401,
-                    "message": "Unauthorized: Invalid or missing Bearer token"
-                  }
+                  "result": null,
+                  "error": "Unauthorized: Invalid or missing Bearer token"
                 }
               }
             }
@@ -144,14 +127,11 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelope"
+                  "$ref": "#/components/schemas/ErrorResponse"
                 },
                 "example": {
-                  "success": false,
-                  "error": {
-                    "code": 500,
-                    "message": "Internal server error"
-                  }
+                  "result": null,
+                  "error": "Internal server error"
                 }
               }
             }
@@ -159,147 +139,20 @@
         }
       }
     },
-    "/customer/{id}": {
-      "get": {
+    "/customer": {
+      "post": {
         "tags": ["Customer"],
-        "summary": "Retrieve a customer by ID",
-        "description": "Returns a single customer identified by their cust_id, wrapped in an envelope response. Response is cached by CacheInterceptor. Requires valid JWT Bearer token.",
-        "operationId": "getById",
+        "summary": "Create a new customer",
+        "description": "Creates a new customer record. The CUST_ID is auto-generated from the first 4 characters of lastname+city (uppercased) followed by the next record number. Returns the created customer data wrapped in an envelope response. Requires valid JWT Bearer token. This operation is NOT cached.",
+        "operationId": "create",
         "security": [
           {
             "BearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "description": "Unique identifier of the customer (maps to cust_id, up to 8 characters)",
-            "schema": {
-              "type": "string",
-              "maxLength": 8
-            },
-            "example": "C00042"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successfully retrieved the customer",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean"
-                    },
-                    "data": {
-                      "$ref": "#/components/schemas/Customer"
-                    }
-                  }
-                },
-                "example": {
-                  "success": true,
-                  "data": {
-                    "cust_id": "C00042",
-                    "firstname": "Alice",
-                    "lastname": "Johnson",
-                    "email": "alice.johnson@example.com",
-                    "phone": "+1-555-0101",
-                    "street": "123 Main Street",
-                    "city": "Springfield",
-                    "state": "IL",
-                    "zipcode": "62701",
-                    "country": "USA",
-                    "active": true,
-                    "created": "2025-03-15",
-                    "modified": "2025-03-15",
-                    "notes": ""
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized - JWT Bearer token is missing or invalid",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelope"
-                },
-                "example": {
-                  "success": false,
-                  "error": {
-                    "code": 401,
-                    "message": "Unauthorized: Invalid or missing Bearer token"
-                  }
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Customer not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelope"
-                },
-                "example": {
-                  "success": false,
-                  "error": {
-                    "code": 404,
-                    "message": "Customer not found"
-                  }
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelope"
-                },
-                "example": {
-                  "success": false,
-                  "error": {
-                    "code": 500,
-                    "message": "Internal server error"
-                  }
-                }
-              }
-            }
-          }
-        }
-      },
-      "put": {
-        "tags": ["Customer"],
-        "summary": "Save or update a customer by ID",
-        "description": "Creates or updates a customer record. When the path id is empty, a new record is added. When the path id contains a valid cust_id, the matching record is updated. The cust_id field in the request body is always ignored — the customer identity is determined solely by the path parameter. Returns the saved customer data wrapped in an envelope response. Requires valid JWT Bearer token. This operation is NOT cached.",
-        "operationId": "saveById",
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": false,
-            "description": "Pass an empty string to create a new customer record; pass an existing cust_id to update the matching record. The cust_id in the request body is always ignored.",
-            "schema": {
-              "type": "string",
-              "maxLength": 8
-            },
-            "example": "C00042"
           }
         ],
         "requestBody": {
           "required": true,
-          "description": "Customer data to save or update. The cust_id field in the body is always ignored; the customer identity is determined solely by the path id parameter.",
+          "description": "Customer data for the new record. The cust_id is always auto-generated and must not be supplied.",
           "content": {
             "application/json": {
               "schema": {
@@ -323,38 +176,41 @@
         },
         "responses": {
           "200": {
-            "description": "Customer successfully saved or updated",
+            "description": "Customer successfully created",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": {
-                      "type": "boolean"
-                    },
-                    "data": {
+                    "result": {
                       "$ref": "#/components/schemas/Customer"
+                    },
+                    "error": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "Error message; null on success",
+                      "example": null
                     }
                   }
                 },
                 "example": {
-                  "success": true,
-                  "data": {
-                    "cust_id": "C00042",
-                    "firstname": "Alice",
-                    "lastname": "Johnson",
-                    "email": "alice.johnson@example.com",
-                    "phone": "+1-555-0101",
-                    "street": "123 Main Street",
-                    "city": "Springfield",
-                    "state": "IL",
-                    "zipcode": "62701",
-                    "country": "USA",
-                    "active": true,
-                    "created": "2025-03-15",
-                    "modified": "2025-06-01",
-                    "notes": ""
-                  }
+                  "result": {
+                    "CUST_ID": "JOHN0042",
+                    "FIRSTNAME": "Alice",
+                    "LASTNAME": "Johnson",
+                    "EMAIL": "alice.johnson@example.com",
+                    "PHONE": "+1-555-0101",
+                    "STREET": "123 Main Street",
+                    "CITY": "Springfield",
+                    "STATE": "IL",
+                    "ZIPCODE": "62701",
+                    "COUNTRY": "USA",
+                    "ACTIVE": true,
+                    "CREATED": "2025-06-01",
+                    "MODIFIED": "2025-06-01",
+                    "NOTES": ""
+                  },
+                  "error": null
                 }
               }
             }
@@ -364,31 +220,253 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelope"
+                  "$ref": "#/components/schemas/ErrorResponse"
                 },
                 "example": {
-                  "success": false,
-                  "error": {
-                    "code": 401,
-                    "message": "Unauthorized: Invalid or missing Bearer token"
-                  }
+                  "result": null,
+                  "error": "Unauthorized: Invalid or missing Bearer token"
                 }
               }
             }
           },
           "500": {
-            "description": "Failed to save customer",
+            "description": "Failed to create customer",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelope"
+                  "$ref": "#/components/schemas/ErrorResponse"
                 },
                 "example": {
-                  "success": false,
-                  "error": {
-                    "code": 500,
-                    "message": "Failed to save customer"
+                  "result": null,
+                  "error": "Failed to create customer"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/customer/{id}": {
+      "get": {
+        "tags": ["Customer"],
+        "summary": "Retrieve a customer by ID",
+        "description": "Returns a single customer identified by their CUST_ID, wrapped in an envelope response. Response is cached by CacheInterceptor. Requires valid JWT Bearer token.",
+        "operationId": "getById",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Unique identifier of the customer (maps to CUST_ID, up to 8 characters)",
+            "schema": {
+              "type": "string",
+              "maxLength": 8
+            },
+            "example": "CUST0014"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved the customer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "result": {
+                      "$ref": "#/components/schemas/Customer"
+                    },
+                    "error": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "Error message; null on success",
+                      "example": null
+                    }
                   }
+                },
+                "example": {
+                  "result": {
+                    "CUST_ID": "CUST0014",
+                    "FIRSTNAME": "Test",
+                    "LASTNAME": "Customer",
+                    "EMAIL": "test.customer@rest.test",
+                    "PHONE": "555-0199",
+                    "STREET": "1 Test Lane",
+                    "CITY": "Testville",
+                    "STATE": "TX",
+                    "ZIPCODE": "10001",
+                    "COUNTRY": "US",
+                    "ACTIVE": true,
+                    "CREATED": "2026-07-04",
+                    "MODIFIED": "2026-07-04",
+                    "NOTES": ""
+                  },
+                  "error": null
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - JWT Bearer token is missing or invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "result": null,
+                  "error": "Unauthorized: Invalid or missing Bearer token"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Customer not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "result": null,
+                  "error": "Customer not found"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "result": null,
+                  "error": "Internal server error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["Customer"],
+        "summary": "Update a customer by ID",
+        "description": "Updates an existing customer record identified by the path id. The CUST_ID field in the request body is always ignored — the customer identity is determined solely by the path parameter. Returns the updated customer data wrapped in an envelope response. Requires valid JWT Bearer token. This operation is NOT cached.",
+        "operationId": "updateById",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Unique identifier (CUST_ID, up to 8 characters) of the customer to update. The cust_id in the request body is always ignored.",
+            "schema": {
+              "type": "string",
+              "maxLength": 8
+            },
+            "example": "CUST0014"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Customer data to update. The cust_id field in the body is always ignored; the customer identity is determined solely by the path id parameter.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomerInput"
+              },
+              "example": {
+                "firstname": "Test",
+                "lastname": "Customer",
+                "email": "test.customer@rest.test",
+                "phone": "555-0199",
+                "street": "1 Test Lane",
+                "city": "Testville",
+                "state": "TX",
+                "zipcode": "10001",
+                "country": "US",
+                "active": true,
+                "notes": ""
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Customer successfully updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "result": {
+                      "$ref": "#/components/schemas/Customer"
+                    },
+                    "error": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "Error message; null on success",
+                      "example": null
+                    }
+                  }
+                },
+                "example": {
+                  "result": {
+                    "CUST_ID": "CUST0014",
+                    "FIRSTNAME": "Test",
+                    "LASTNAME": "Customer",
+                    "EMAIL": "test.customer@rest.test",
+                    "PHONE": "555-0199",
+                    "STREET": "1 Test Lane",
+                    "CITY": "Testville",
+                    "STATE": "TX",
+                    "ZIPCODE": "10001",
+                    "COUNTRY": "US",
+                    "ACTIVE": true,
+                    "CREATED": "2026-07-04",
+                    "MODIFIED": "2026-07-05",
+                    "NOTES": ""
+                  },
+                  "error": null
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - JWT Bearer token is missing or invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "result": null,
+                  "error": "Unauthorized: Invalid or missing Bearer token"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to update customer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "result": null,
+                  "error": "Failed to save customer"
                 }
               }
             }
@@ -398,7 +476,7 @@
       "delete": {
         "tags": ["Customer"],
         "summary": "Delete a customer by ID",
-        "description": "Permanently deletes the customer identified by the cust_id. Returns a boolean result wrapped in an envelope response. Requires valid JWT Bearer token. This operation is NOT cached.",
+        "description": "Permanently deletes the customer identified by the CUST_ID. Returns a boolean result wrapped in an envelope response. Requires valid JWT Bearer token. This operation is NOT cached.",
         "operationId": "deleteById",
         "security": [
           {
@@ -410,12 +488,12 @@
             "name": "id",
             "in": "path",
             "required": true,
-            "description": "Unique identifier (cust_id, up to 8 characters) of the customer to delete",
+            "description": "Unique identifier (CUST_ID, up to 8 characters) of the customer to delete",
             "schema": {
               "type": "string",
               "maxLength": 8
             },
-            "example": "C00042"
+            "example": "CUST0014"
           }
         ],
         "responses": {
@@ -426,18 +504,21 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": {
-                      "type": "boolean"
-                    },
-                    "data": {
+                    "result": {
                       "type": "boolean",
                       "description": "True if the customer was successfully deleted"
+                    },
+                    "error": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "Error message; null on success",
+                      "example": null
                     }
                   }
                 },
                 "example": {
-                  "success": true,
-                  "data": true
+                  "result": true,
+                  "error": null
                 }
               }
             }
@@ -447,14 +528,11 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelope"
+                  "$ref": "#/components/schemas/ErrorResponse"
                 },
                 "example": {
-                  "success": false,
-                  "error": {
-                    "code": 401,
-                    "message": "Unauthorized: Invalid or missing Bearer token"
-                  }
+                  "result": null,
+                  "error": "Unauthorized: Invalid or missing Bearer token"
                 }
               }
             }
@@ -464,14 +542,11 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelope"
+                  "$ref": "#/components/schemas/ErrorResponse"
                 },
                 "example": {
-                  "success": false,
-                  "error": {
-                    "code": 404,
-                    "message": "Customer not found"
-                  }
+                  "result": null,
+                  "error": "Customer not found"
                 }
               }
             }
@@ -481,14 +556,11 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelope"
+                  "$ref": "#/components/schemas/ErrorResponse"
                 },
                 "example": {
-                  "success": false,
-                  "error": {
-                    "code": 500,
-                    "message": "Internal server error"
-                  }
+                  "result": null,
+                  "error": "Internal server error"
                 }
               }
             }
@@ -528,54 +600,41 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": {
-                      "type": "boolean"
-                    },
-                    "data": {
+                    "result": {
                       "type": "array",
                       "description": "Array of matching customer objects",
                       "items": {
                         "$ref": "#/components/schemas/Customer"
                       }
+                    },
+                    "error": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "Error message; null on success",
+                      "example": null
                     }
                   }
                 },
                 "example": {
-                  "success": true,
-                  "data": [
+                  "result": [
                     {
-                      "cust_id": "C00042",
-                      "firstname": "Alice",
-                      "lastname": "Johnson",
-                      "email": "alice.johnson@example.com",
-                      "phone": "+1-555-0101",
-                      "street": "123 Main Street",
-                      "city": "Springfield",
-                      "state": "IL",
-                      "zipcode": "62701",
-                      "country": "USA",
-                      "active": true,
-                      "created": "2025-03-15",
-                      "modified": "2025-03-15",
-                      "notes": ""
-                    },
-                    {
-                      "cust_id": "C00087",
-                      "firstname": "Mark",
-                      "lastname": "Johnson",
-                      "email": "mark.johnson@example.com",
-                      "phone": "+1-555-0199",
-                      "street": "789 Elm Street",
-                      "city": "Capital City",
-                      "state": "TX",
-                      "zipcode": "78701",
-                      "country": "USA",
-                      "active": true,
-                      "created": "2025-06-01",
-                      "modified": "2025-06-01",
-                      "notes": ""
+                      "CUST_ID": "JOHN0009",
+                      "FIRSTNAME": "Alice",
+                      "LASTNAME": "Johnson",
+                      "EMAIL": "alice.johnson@example.com",
+                      "PHONE": "+1-555-0101",
+                      "STREET": "123 Main Street",
+                      "CITY": "Springfield",
+                      "STATE": "IL",
+                      "ZIPCODE": "62701",
+                      "COUNTRY": "USA",
+                      "ACTIVE": true,
+                      "CREATED": "2025-03-15",
+                      "MODIFIED": "2025-03-15",
+                      "NOTES": ""
                     }
-                  ]
+                  ],
+                  "error": null
                 }
               }
             }
@@ -585,14 +644,11 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelope"
+                  "$ref": "#/components/schemas/ErrorResponse"
                 },
                 "example": {
-                  "success": false,
-                  "error": {
-                    "code": 401,
-                    "message": "Unauthorized: Invalid or missing Bearer token"
-                  }
+                  "result": null,
+                  "error": "Unauthorized: Invalid or missing Bearer token"
                 }
               }
             }
@@ -602,30 +658,11 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean"
-                    },
-                    "data": {
-                      "type": "array",
-                      "description": "Empty array when no customers match",
-                      "items": {
-                        "type": "object"
-                      }
-                    },
-                    "error": {
-                      "$ref": "#/components/schemas/ErrorDetail"
-                    }
-                  }
+                  "$ref": "#/components/schemas/ErrorResponse"
                 },
                 "example": {
-                  "success": false,
-                  "data": [],
-                  "error": {
-                    "code": 404,
-                    "message": "No customers found matching: JOHNSON"
-                  }
+                  "result": null,
+                  "error": "No customers found matching: JOHNSON"
                 }
               }
             }
@@ -635,14 +672,11 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelope"
+                  "$ref": "#/components/schemas/ErrorResponse"
                 },
                 "example": {
-                  "success": false,
-                  "error": {
-                    "code": 500,
-                    "message": "Internal server error"
-                  }
+                  "result": null,
+                  "error": "Internal server error"
                 }
               }
             }
@@ -655,74 +689,74 @@
     "schemas": {
       "Customer": {
         "type": "object",
-        "description": "Customer record as stored in and returned from the customer.dbf workarea",
+        "description": "Customer record as returned from the customer.dbf workarea. Field names are uppercase as serialised by the DBF engine.",
         "properties": {
-          "cust_id": {
+          "CUST_ID": {
             "type": "string",
             "maxLength": 8,
             "description": "Unique customer identifier (C,8 character field)"
           },
-          "firstname": {
+          "FIRSTNAME": {
             "type": "string",
             "maxLength": 50,
             "description": "First name of the customer"
           },
-          "lastname": {
+          "LASTNAME": {
             "type": "string",
             "maxLength": 50,
             "description": "Last name of the customer"
           },
-          "email": {
+          "EMAIL": {
             "type": "string",
             "format": "email",
             "maxLength": 100,
             "description": "Customer email address"
           },
-          "phone": {
+          "PHONE": {
             "type": "string",
             "maxLength": 20,
             "description": "Customer phone number"
           },
-          "street": {
+          "STREET": {
             "type": "string",
             "maxLength": 100,
             "description": "Customer street address"
           },
-          "city": {
+          "CITY": {
             "type": "string",
             "maxLength": 50,
             "description": "Customer city"
           },
-          "state": {
+          "STATE": {
             "type": "string",
             "maxLength": 50,
             "description": "Customer state or region"
           },
-          "zipcode": {
+          "ZIPCODE": {
             "type": "string",
             "maxLength": 10,
             "description": "Customer ZIP or postal code"
           },
-          "country": {
+          "COUNTRY": {
             "type": "string",
             "maxLength": 50,
             "description": "Customer country"
           },
-          "active": {
+          "ACTIVE": {
             "type": "boolean",
             "description": "Indicates whether the customer account is active"
           },
-          "created": {
+          "CREATED": {
             "type": "string",
             "format": "date",
             "description": "Date when the customer record was created (set automatically on first save)"
           },
-          "modified": {
+          "MODIFIED": {
             "type": "string",
             "format": "date",
             "description": "Date when the customer record was last modified (updated on every save)"
           },
-          "notes": {
+          "NOTES": {
             "type": "string",
             "description": "Additional notes about the customer (memo field)"
           }
@@ -730,7 +764,7 @@
       },
       "CustomerInput": {
         "type": "object",
-        "description": "Customer data submitted for create or update operations. The cust_id is never part of the body — it is always taken from the path parameter.",
+        "description": "Customer data submitted for create or update operations. Field names are lowercase as expected by the handler. The cust_id is never part of the request body — for POST it is auto-generated; for PUT it is taken from the path parameter.",
         "required": ["firstname", "lastname", "email"],
         "properties": {
           "firstname": {
@@ -789,25 +823,18 @@
           }
         }
       },
-      "ErrorDetail": {
+      "ErrorResponse": {
         "type": "object",
+        "description": "Standard error envelope returned on failure",
         "properties": {
-          "code": {
-            "type": "integer"
-          },
-          "message": {
-            "type": "string"
-          }
-        }
-      },
-      "ErrorEnvelope": {
-        "type": "object",
-        "properties": {
-          "success": {
-            "type": "boolean"
+          "result": {
+            "nullable": true,
+            "description": "Always null when an error is present",
+            "example": null
           },
           "error": {
-            "$ref": "#/components/schemas/ErrorDetail"
+            "type": "string",
+            "description": "Human-readable error message describing what went wrong"
           }
         }
       }
